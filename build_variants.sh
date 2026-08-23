@@ -47,7 +47,7 @@ for cols in 5 6; do for extra in no yes; do for bat in 902030 103450; do for dis
 done; done; done; done
 
 # one thin PCB-build variant (the board itself is a KiCad project -- see docs/pcb/)
-name="5col_extra2_bat902030_pcb"; args='-D build="pcb"'
+name="5col_extra2_bat902030_pcb"; args='-D build="pcb" -D battery_well_floor=1.2'
 if [[ -z ${ONLY:-} || $name == *${ONLY}* ]]; then
   echo "=== $name"
   rm -rf "$ROOT/$name"; mkdir -p "$ROOT/$name"
