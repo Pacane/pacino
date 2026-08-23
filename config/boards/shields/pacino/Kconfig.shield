@@ -1,0 +1,5 @@
+config SHIELD_PACINO_LEFT
+	def_bool $(shields_list_contains,pacino_left)
+
+config SHIELD_PACINO_RIGHT
+	def_bool $(shields_list_contains,pacino_right)

@@ -1,0 +1,11 @@
+#include "pacino.dtsi"
+
+&kscan0 {
+    col-gpios
+        = <&pro_micro 9 GPIO_ACTIVE_HIGH>    /* col 0: pinky  */
+        , <&pro_micro 8 GPIO_ACTIVE_HIGH>    /* col 1: ring   */
+        , <&pro_micro 7 GPIO_ACTIVE_HIGH>    /* col 2: middle */
+        , <&pro_micro 6 GPIO_ACTIVE_HIGH>    /* col 3: index  */
+        , <&pro_micro 5 GPIO_ACTIVE_HIGH>    /* col 4: inner  */
+        ;
+};

@@ -318,6 +318,30 @@ Every option combination, with previews, sizes and download links:
 **[variants/README.md](variants/README.md)** — each directory also carries an exploded-style
 `preview_assembly.png`, a `preview_top.png` and its own `wiring_guide.png`.
 
+## Firmware (ZMK)
+
+This repo doubles as the ZMK config — no separate zmk-config repo needed. `config/` holds the
+`pacino` shield (matrix, transform, default keymap) and `build.yaml` the build matrix; pushing a
+change to either makes **GitHub Actions build the firmware** (Actions tab → latest run →
+artifacts → `.uf2` files for left, right and `settings_reset`). SuperMini nRF52840 clones flash
+as `nice_nano_v2`: double-tap reset, drag the `.uf2` on.
+
+Electrical matrix (matches [`docs/wiring_guide.png`](docs/wiring_guide.png)) — 5 columns × 5 rows
+per half, diodes `col2row` (Amoeba-King: switch → diode → ROW pad):
+
+| matrix | wires to | nice!nano pin |
+|---|---|---|
+| row 0 / 1 / 2 | top / home / bottom key row | `pro_micro` 21 / 20 / 19 |
+| row 3 | the two extra keys | `pro_micro` 18 |
+| row 4 | the three thumbs | `pro_micro` 10 |
+| col 0…4 | pinky → inner column (each column chain includes its extra key and thumb) | `pro_micro` 9 / 8 / 7 / 6 / 5 |
+
+Pins 1, 14, 15, 16 are left free on purpose: they are the nice!view's CS/MISO/SCK/MOSI, so the
+display variant is wiring + two uncommented lines in `build.yaml` + `CONFIG_ZMK_DISPLAY=y` in
+`config/pacino.conf`. Edit your keymap in `config/pacino.keymap`. The left half is the central
+side. The shield covers the default 5-column + 2-extra layout; the 6-column or no-extra variants
+need a matching edit to the transform and one more column pin.
+
 ## Requirements
 
 - OpenSCAD 2025.03+ (Manifold backend) — `/Applications/OpenSCAD.app`
