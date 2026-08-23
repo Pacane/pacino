@@ -1,14 +1,14 @@
 # ZMK firmware build matrix (GitHub Actions builds these; grab the .uf2 from the workflow artifacts).
-# SuperMini nRF52840 clones flash and run as nice_nano_v2.
+# SuperMini nRF52840 clones flash and run as a nice!nano v2 (board "nice_nano//zmk" since ZMK's Zephyr 4.1 move).
 include:
-  - board: nice_nano_v2
+  - board: nice_nano//zmk
     shield: pacino_left
-  - board: nice_nano_v2
+  - board: nice_nano//zmk
     shield: pacino_right
   # nice!view display variant -- wire the display to pro_micro 1 (CS), 14 (MISO), 15 (SCK), 16 (MOSI):
-  # - board: nice_nano_v2
+  # - board: nice_nano//zmk
   #   shield: pacino_left nice_view_adapter nice_view
-  # - board: nice_nano_v2
+  # - board: nice_nano//zmk
   #   shield: pacino_right nice_view_adapter nice_view
-  - board: nice_nano_v2
+  - board: nice_nano//zmk
     shield: settings_reset
