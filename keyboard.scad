@@ -18,7 +18,7 @@ include <layouts/cheapino.scad>
 include <layouts/badtemper.scad>
 
 /* [Output] */
-part = "assembly"; // [assembly, section, case, plate, bezel, insert_test, plate_2d, case_outline_2d, cavity_2d, pcb_2d, bezel_2d, info]
+part = "assembly"; // [assembly, section, case, plate, bezel, insert_test, plate_2d, case_outline_2d, cavity_2d, pcb_2d, pcb_outline_2d, bezel_2d, info]
 // part = "section": 2D cross-section of the assembly through the plane x = section_x (Y across, Z up)
 section_x = 123;
 side = "left"; // [left, right, both]
@@ -68,8 +68,9 @@ build = "plate"; // [plate, pcb]
 // stack needs (battery + 4), but at least 10 so there is room under the MX pins for diodes and wires.
 // (9-10 mm cells come out at 13.5-14.5, a 6 mm cell at 10.)
 cavity_depth = 0;
-// pcb build: PCB underside above the floor (hotswap sockets ~1.9 + whatever lives under the PCB)
-pcb_lift = 5;
+// pcb build: PCB underside above the floor. 0 = automatic: hotswap sockets (2.4) or whatever makes the
+// battery -- which sits on the floor, poking through a cutout in the PCB -- fit under the plate
+pcb_lift = 0;
 pcb_t = 1.6;
 // pcb build: MCU socket height above the PCB
 mcu_socket_h = 3.5;
@@ -351,7 +352,8 @@ bay_holes = has_bay ? [[bay_right - 3, bay_top - 0.5], [bay_right - 2.5, (has_ct
 left_holes = [[x_left - 11.5, 22], [x_left, -11.5]];   // left wall mid-height, below the outermost column
 holes = layout == "cheapino" ? cheapino_holes : layout == "badtemper" ? badtemper_holes : concat(left_holes, grid_holes, bay_holes);
 
-z_pcb_bot   = floor_t + pcb_lift;
+pcb_lift_e  = pcb_lift > 0 ? pcb_lift : max(2.4, battery[2] + 0.5 - (plate_to_pcb - plate_t) - pcb_t);
+z_pcb_bot   = floor_t + pcb_lift_e;
 z_pcb_top   = z_pcb_bot + pcb_t;
 cavity_d = cavity_depth > 0 ? cavity_depth : max(10, battery[2] + 4);
 z_plate_bot = build == "pcb" ? z_pcb_top + plate_to_pcb - plate_t : floor_t + cavity_d;
@@ -711,4 +713,9 @@ mirrored_for_side() {
   else if (part == "case_outline_2d") outline_2d();
   else if (part == "cavity_2d")       cavity_2d();
   else if (part == "pcb_2d")          pcb_2d();
+  else if (part == "pcb_outline_2d")  difference() {   // recommended Edge.Cuts for a Pacino PCB (build = "pcb")
+    offset(r = -pcb_gap) cavity_2d();
+    if (has_bay) battery_2d(1);                        // battery pokes up through the board
+    for (h = holes) translate(h) circle(d = 2.2);      // M2 clearance for the case bosses' screws
+  }
 }

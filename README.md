@@ -312,6 +312,23 @@ It picks up `SW*`/`K*`/`MX*` switch footprints (position, rotation), mounting ho
 1.9–3.6 mm drills, `U1` as the MCU, and chains `Edge.Cuts` into one polygon. Add an `include`
 and a `layout` option in `keyboard.scad` the way `cheapino`/`badtemper` are wired in.
 
+## Thin PCB variant
+
+`build = "pcb"` turns the same design into a **PCB sandwich**: hot-swap sockets on a real board
+instead of hand-wiring, plate spacer bosses down to the PCB, MX plate-to-PCB spacing handled, the
+controller soldered to the board under the plate window, reset/power moved onto the PCB, and the
+battery standing on the floor through a cutout in the board. Heights to the plate top: **14 mm**
+with the 902030, 15 mm with the 103450, and 11.5 mm with a 6 mm cell — vs 17.5 mm hand-wired.
+The printed parts are in [`variants/5col_extra2_bat902030_pcb/`](variants/5col_extra2_bat902030_pcb/).
+
+The PCB itself is a KiCad project to design; this repo bootstraps it:
+[`docs/pcb/pacino_edge_cuts.dxf`](docs/pcb/pacino_edge_cuts.dxf) is the exact board outline
+(cavity − 0.5 mm, battery cutout, M2 boss holes) to import onto `Edge.Cuts`, and
+[`docs/pcb/pacino_placement.csv`](docs/pcb/pacino_placement.csv) lists every switch, hole, the MCU
+and the battery keep-out in KiCad coordinates (`tools/kicad_placement.py` regenerates both). Make
+the board reversible and one design serves both halves. Once it exists, `tools/kicad_layout.py`
+reads the finished `.kicad_pcb` back so the case can follow the real board exactly.
+
 ## Variant gallery
 
 Every option combination, with previews, sizes and download links:

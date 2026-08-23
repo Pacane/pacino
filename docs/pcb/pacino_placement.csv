@@ -1,0 +1,31 @@
+type,ref,x_model,y_model,rot_deg,x_kicad,y_kicad,note
+switch,SW1,0,0,0,60.0,120.0,1u MX hotswap
+switch,SW2,0,19.05,0,60.0,100.95,1u MX hotswap
+switch,SW3,0,38.1,0,60.0,81.9,1u MX hotswap
+switch,SW4,19.05,10,0,79.05,110.0,1u MX hotswap
+switch,SW5,19.05,29.05,0,79.05,90.95,1u MX hotswap
+switch,SW6,19.05,48.1,0,79.05,71.9,1u MX hotswap
+switch,SW7,38.1,16.4,0,98.1,103.6,1u MX hotswap
+switch,SW8,38.1,35.45,0,98.1,84.55,1u MX hotswap
+switch,SW9,38.1,54.5,0,98.1,65.5,1u MX hotswap
+switch,SW10,57.15,10,0,117.15,110.0,1u MX hotswap
+switch,SW11,57.15,29.05,0,117.15,90.95,1u MX hotswap
+switch,SW12,57.15,48.1,0,117.15,71.9,1u MX hotswap
+switch,SW13,76.2,7.5,0,136.2,112.5,1u MX hotswap
+switch,SW14,76.2,26.55,0,136.2,93.45,1u MX hotswap
+switch,SW15,76.2,45.6,0,136.2,74.4,1u MX hotswap
+switch,SW16,19.05,-9.05,0,79.05,129.05,1u MX hotswap
+switch,SW17,38.1,-2.65,0,98.1,122.65,1u MX hotswap
+switch,SW18,71.5,-15.5,80,131.5,135.5,1.25u MX hotswap
+switch,SW19,92.5,-21.5,68,152.5,141.5,1.25u MX hotswap
+switch,SW20,111.7,-31.7,56,171.7,151.7,1.25u MX hotswap
+hole,H1,-11.5,22,0,48.5,98.0,"M2 clearance 2.2, screw passes into the case boss below"
+hole,H2,0,-11.5,0,60.0,131.5,"M2 clearance 2.2, screw passes into the case boss below"
+hole,H3,38.1,66,0,98.1,54.0,"M2 clearance 2.2, screw passes into the case boss below"
+hole,H4,76.2,57.1,0,136.2,62.9,"M2 clearance 2.2, screw passes into the case boss below"
+hole,H5,58.5,-4.4,0,118.5,124.4,"M2 clearance 2.2, screw passes into the case boss below"
+hole,H6,112,-48.2,0,172.0,168.2,"M2 clearance 2.2, screw passes into the case boss below"
+hole,H7,119,60.5,0,179.0,59.5,"M2 clearance 2.2, screw passes into the case boss below"
+hole,H8,119.5,20.4,0,179.5,99.6,"M2 clearance 2.2, screw passes into the case boss below"
+mcu,U1,103.25,43.5,0,163.25,76.5,"nice!nano footprint, USB towards +Y (model) / -Y (KiCad)"
+keepout,BAT,101.5,39.9,0,161.5,80.1,battery pokes through the board cutout here (already in the Edge.Cuts DXF)
