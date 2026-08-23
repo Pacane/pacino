@@ -110,6 +110,10 @@ battery_clearance = 0.5;
 battery_offset = [0, 0];
 // locating fence around the battery (height, width); the lead end is left open
 battery_fence = [3, 1.2];
+// sink the battery into the floor, leaving this much plastic under it (0 = off, battery sits on the full
+// floor inside the fence). The well's walls replace the fence, and the case gets ~1.3 mm thinner. The two
+// bay bumpons are skipped when on (no room beside the well).
+battery_well_floor = 0;
 // controller board [width, length] -- measured with calipers: SuperMini nRF52840 clone = [18.1, 33]
 // (nice!nano = [18, 33.5]).  The latch relies on the pocket being ~1.3 mm longer than the board, so measure.
 mcu_size = [18.1, 33];
@@ -344,7 +348,7 @@ nv_boss_y = [nv_cy + nv_L / 2 + 1 + nv_boss_d / 2, nv_cy - nv_L / 2 - 1 - nv_bos
 nv_bezel_size = [nv_W + 2 * nv_bezel_margin, nv_L + 2 * (1 + nv_boss_d + 1)];
 
 // bumpons: the fixed list plus two on the bay (inset 8 mm from its top-right and bottom-right corners)
-bumpons = concat([[x_left - 4, -4], [x_left - 4, 42]], bumpon_positions, has_bay
+bumpons = concat([[x_left - 4, -4], [x_left - 4, 42]], bumpon_positions, has_bay && battery_well_floor == 0
   ? [[bay_right - 8, bay_top - 8], [bay_right - 10, (has_ctrl ? ctrl_rect[1] : bay[1]) + 12]] : []);
 
 // bosses on the bay walls: top-right corner and (control-bay) bottom-right corner
@@ -352,14 +356,15 @@ bay_holes = has_bay ? [[bay_right - 3, bay_top - 0.5], [bay_right - 2.5, (has_ct
 left_holes = [[x_left - 11.5, 22], [x_left, -11.5]];   // left wall mid-height, below the outermost column
 holes = layout == "cheapino" ? cheapino_holes : layout == "badtemper" ? badtemper_holes : concat(left_holes, grid_holes, bay_holes);
 
-pcb_lift_e  = pcb_lift > 0 ? pcb_lift : max(2.4, battery[2] + 0.5 - (plate_to_pcb - plate_t) - pcb_t);
+batt_z0     = battery_well_floor > 0 ? battery_well_floor : floor_t;
+pcb_lift_e  = pcb_lift > 0 ? pcb_lift : max(2.4, batt_z0 + battery[2] + 0.5 - floor_t - (plate_to_pcb - plate_t) - pcb_t);
 z_pcb_bot   = floor_t + pcb_lift_e;
 z_pcb_top   = z_pcb_bot + pcb_t;
-cavity_d = cavity_depth > 0 ? cavity_depth : max(10, battery[2] + 4);
+cavity_d = cavity_depth > 0 ? cavity_depth : max(10, batt_z0 + battery[2] + 4 - floor_t);
 z_plate_bot = build == "pcb" ? z_pcb_top + plate_to_pcb - plate_t : floor_t + cavity_d;
 z_plate_top = z_plate_bot + plate_t;
 z_wall_top  = z_plate_bot;
-z_batt_top  = floor_t + battery[2];
+z_batt_top  = batt_z0 + battery[2];
 z_mcu_bot   = build == "pcb" ? z_pcb_top + mcu_socket_h : z_batt_top + mcu_above_battery;
 z_mcu_top   = z_mcu_bot + mcu_pcb_t;
 z_ledge_bot = z_mcu_bot - ledge_t;
@@ -453,7 +458,7 @@ module wall_cutouts() {
   if (len(extra_cutouts) > 0) for (c = extra_cutouts) wall_cut(c[0], c[1], c[2], c[3], c[4], c[5]);
 }
 
-module battery_fence() if (has_bay && battery_fence[0] > 0)
+module battery_fence() if (has_bay && battery_fence[0] > 0 && battery_well_floor == 0)
   translate([0, 0, floor_t - eps]) linear_extrude(battery_fence[0] + eps) difference() {
     battery_2d(battery_clearance + battery_fence[1]);
     battery_2d(battery_clearance);
@@ -488,6 +493,8 @@ module case_bottom() difference() {
   wall_cutouts();
   if (bumpon_d > 0) for (b = bumpons) translate([b[0], b[1], -1]) cylinder(d = bumpon_d + 2 * bumpon_clearance, h = bumpon_depth + 1);
   if (magsafe_d > 0) translate([magsafe_pos[0], magsafe_pos[1], -1]) cylinder(d = magsafe_d + 2 * magsafe_clearance, h = magsafe_depth + 1, $fn = 128);
+  if (has_bay && battery_well_floor > 0)   // battery well sunk into the floor (its walls locate the cell)
+    translate([0, 0, battery_well_floor]) linear_extrude(floor_t - battery_well_floor + eps) battery_2d(0.75);
 }
 
 // ---- nice!view: hanging ring with ledges + bezel screw bosses, the pocket cuts, and the separate bezel part
@@ -652,7 +659,7 @@ module ctrl_3d(p, body, recess, actuator) {
 }
 
 module electronics_3d() {
-  if (has_bay) color("dimgray", 0.8) translate([0, 0, floor_t]) linear_extrude(battery[2]) battery_2d();
+  if (has_bay) color("dimgray", 0.8) translate([0, 0, batt_z0]) linear_extrude(battery[2]) battery_2d();
   if (!cradle) mcu_3d();
   if (build == "pcb" && cavity_from == "pcb")
     color("darkolivegreen", 0.7) translate([0, 0, z_pcb_bot]) linear_extrude(pcb_t) pcb_2d();

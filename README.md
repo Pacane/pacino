@@ -317,8 +317,11 @@ and a `layout` option in `keyboard.scad` the way `cheapino`/`badtemper` are wire
 `build = "pcb"` turns the same design into a **PCB sandwich**: hot-swap sockets on a real board
 instead of hand-wiring, plate spacer bosses down to the PCB, MX plate-to-PCB spacing handled, the
 controller soldered to the board under the plate window, reset/power moved onto the PCB, and the
-battery standing on the floor through a cutout in the board. Heights to the plate top: **14 mm**
-with the 902030, 15 mm with the 103450, and 11.5 mm with a 6 mm cell — vs 17.5 mm hand-wired.
+battery standing through a cutout in the board, **sunk into a well in the floor**
+(`battery_well_floor = 1.2` — 1.2 mm of plastic under the cell instead of the full 2.5 mm floor;
+the well's walls locate the cell, replacing the fence). Heights to the plate top: **12.7 mm** with
+the 902030, 13.7 mm with the 103450, and 11.5 mm with a 6 mm cell — vs 17.5 mm hand-wired. (The
+well also works on the hand-wired build for −1.3 mm, at the cost of the two bay bumpons.)
 The printed parts are in [`variants/5col_extra2_bat902030_pcb/`](variants/5col_extra2_bat902030_pcb/).
 
 The PCB itself is a KiCad project to design; this repo bootstraps it:
