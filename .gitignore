@@ -1,0 +1,5 @@
+# scratch build output of ./build.sh (regenerate any time); the published sets live in variants/
+out/
+*.csg
+variants_build.log
+variants/_m.svg
