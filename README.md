@@ -8,6 +8,11 @@ Named after (and descended from) the [cheapino](https://github.com/tompi/cheapin
 stagger and thumb-cluster geometry it borrows; hardware-wise it runs a nice!nano-compatible
 nRF52840, Kailh hot-swap sockets on Amoeba-King single-key PCBs, and ZMK.
 
+![Pacino — 5 columns + 2 extra keys, nice!view version](docs/pacino.png)
+
+*The 5-column + 2-extra-keys build with the nice!view display. Renders of every other combination
+are [at the bottom](#variant-gallery).*
+
 **The default design:** a cheapino-style 3×5 (+2) + 3-thumb column-stagger layout on a clean
 19.05 mm **MX** grid with **1.25u thumbs**, an **electronics bay** beside the inner column that
 holds a **LiPo** (in the case floor, inside a locating fence — a 902030 by default), a **nice!nano** (in a
@@ -16,8 +21,6 @@ switch** in pockets in the plate, laid out for **hand-wiring**. A **nice!view** 
 the plate beside the nano, clamped by a screw-down bezel) is in the model but off by default:
 mounting bosses live in the walls, not in the matrix, and there is ~3 mm under the switch pins.
 A PCB-sandwich build is a switch away.
-
-![assembly](out/preview_assembly.png)
 
 ```
 keyboard.scad            the model — all parameters at the top, Customizer-friendly (parts: case, plate, section; bezel with nice_view)
@@ -308,6 +311,12 @@ python3 tools/kicad_layout.py path/to/board.kicad_pcb --prefix mykbd > layouts/m
 It picks up `SW*`/`K*`/`MX*` switch footprints (position, rotation), mounting holes with
 1.9–3.6 mm drills, `U1` as the MCU, and chains `Edge.Cuts` into one polygon. Add an `include`
 and a `layout` option in `keyboard.scad` the way `cheapino`/`badtemper` are wired in.
+
+## Variant gallery
+
+Every option combination, with previews, sizes and download links:
+**[variants/README.md](variants/README.md)** — each directory also carries an exploded-style
+`preview_assembly.png`, a `preview_top.png` and its own `wiring_guide.png`.
 
 ## Requirements
 
