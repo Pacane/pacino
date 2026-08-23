@@ -316,7 +316,8 @@ and a `layout` option in `keyboard.scad` the way `cheapino`/`badtemper` are wire
 
 `build = "pcb"` turns the same design into a **PCB sandwich**: hot-swap sockets on a real board
 instead of hand-wiring, plate spacer bosses down to the PCB, MX plate-to-PCB spacing handled, the
-controller soldered to the board under the plate window, reset/power moved onto the PCB, and the
+controller soldered to the board under the plate window, reset/power as PCB-mounted parts poking
+up through their own plate windows (positions in the placement CSV), and the
 battery standing through a cutout in the board, **sunk into a well in the floor**
 (`battery_well_floor = 1.2` — 1.2 mm of plastic under the cell instead of the full 2.5 mm floor;
 the well's walls locate the cell, replacing the fence). Heights to the plate top: **12.7 mm** with

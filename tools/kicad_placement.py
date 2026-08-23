@@ -23,6 +23,7 @@ info = "".join(l.replace("ECHO: ", "") for l in out.splitlines() if l.startswith
 def arr(name):
     m = re.search(name + r' = (\[.*?\])(?=, [a-z_]+ =|$)', info); return eval(m.group(1))
 keys, holes, mcu, batt = arr("keys"), arr("holes"), arr("mcu"), arr("battery_c")
+rst, pwr = arr("reset"), arr("power")
 subprocess.run([OPENSCAD, "--backend=Manifold", "-q", "-D", 'part="pcb_outline_2d"', *args,
                 "-o", "docs/pcb/pacino_edge_cuts.dxf", "keyboard.scad"], check=True)
 with open("docs/pcb/pacino_placement.csv", "w", newline="") as f:
@@ -38,5 +39,9 @@ with open("docs/pcb/pacino_placement.csv", "w", newline="") as f:
                 "nice!nano footprint, USB towards +Y (model) / -Y (KiCad)"])
     w.writerow(["keepout", "BAT", batt[0], batt[1], 0, round(KX0 + batt[0], 3), round(KY0 - batt[1], 3),
                 "battery pokes through the board cutout here (already in the Edge.Cuts DXF)"])
+    w.writerow(["reset", "RSW1", rst[0], rst[1], 0, round(KX0 + rst[0], 3), round(KY0 - rst[1], 3),
+                "PCB-mounted reset (the plate has a window here)"])
+    w.writerow(["power", "PWR1", pwr[0], pwr[1], 0, round(KX0 + pwr[0], 3), round(KY0 - pwr[1], 3),
+                "PCB-mounted power slide switch (the plate has a window here)"])
 print("wrote docs/pcb/pacino_edge_cuts.dxf and docs/pcb/pacino_placement.csv (%d switches, %d holes)"
       % (len(keys), len(holes)))

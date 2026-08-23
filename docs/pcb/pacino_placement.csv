@@ -26,6 +26,8 @@ hole,H4,76.2,57.1,0,136.2,62.9,"M2 clearance 2.2, screw passes into the case bos
 hole,H5,58.5,-4.4,0,118.5,124.4,"M2 clearance 2.2, screw passes into the case boss below"
 hole,H6,112,-48.2,0,172.0,168.2,"M2 clearance 2.2, screw passes into the case boss below"
 hole,H7,119,60.5,0,179.0,59.5,"M2 clearance 2.2, screw passes into the case boss below"
-hole,H8,119.5,20.4,0,179.5,99.6,"M2 clearance 2.2, screw passes into the case boss below"
+hole,H8,119.5,9.2,0,179.5,110.8,"M2 clearance 2.2, screw passes into the case boss below"
 mcu,U1,103.25,43.5,0,163.25,76.5,"nice!nano footprint, USB towards +Y (model) / -Y (KiCad)"
 keepout,BAT,101.5,39.9,0,161.5,80.1,battery pokes through the board cutout here (already in the Edge.Cuts DXF)
+reset,RSW1,98,16.7,0,158.0,103.3,PCB-mounted reset (the plate has a window here)
+power,PWR1,110,16.7,0,170.0,103.3,PCB-mounted power slide switch (the plate has a window here)

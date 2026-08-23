@@ -303,7 +303,8 @@ battery = battery_type == "103450" ? [34, 50, 10.5] : battery_type == "604060" ?
 has_bay = layout == "grid" && use_bay;
 cradle = build == "plate" && has_bay;
 has_nv = nice_view && cradle;
-has_ctrl = cradle && (reset_button || power_switch);
+has_ctrl = has_bay && (reset_button || power_switch);   // the control strip exists in both builds;
+                                                        // plate pockets only when hand-wired, windows when on a PCB
 
 // electronics footprint across the bay: nano cradle [+ gap + nice!view ring]
 nano_w = mcu_size[0] + 2 * (mcu_side_clearance + rail_w);
@@ -433,6 +434,8 @@ module plate_windows_2d() intersection() {
   union() {
     for (w = plate_windows) translate([w[0], w[1]]) rotate(w[4]) rect(w[2], w[3]);
     if (build == "pcb") at_mcu() rect(mcu[3] + 2, mcu[4] + 2);   // window over a PCB-mounted MCU
+    if (build == "pcb" && has_ctrl && reset_button) translate(reset_c) rect(reset_body[0] + 1, reset_body[1] + 1);   // PCB-mounted
+    if (build == "pcb" && has_ctrl && power_switch) translate(power_c) rect(power_body[0] + 1, power_body[1] + 1);   // switches poke through
   }
 }
 
@@ -610,12 +613,12 @@ module plate() difference() {
       for (h = holes) translate([h[0], h[1], z_pcb_top]) cylinder(d = plate_boss_d, h = z_plate_bot - z_pcb_top + eps);
     if (cradle) cradle_solid();
     if (has_nv) nv_solid();
-    if (has_ctrl && reset_button) ctrl_solid(reset_c, reset_body, reset_recess);
-    if (has_ctrl && power_switch) ctrl_solid(power_c, power_body, power_recess);
+    if (build == "plate" && has_ctrl && reset_button) ctrl_solid(reset_c, reset_body, reset_recess);
+    if (build == "plate" && has_ctrl && power_switch) ctrl_solid(power_c, power_body, power_recess);
   }
   if (has_nv) nv_cuts();
-  if (has_ctrl && reset_button) ctrl_cut(reset_c, reset_body, reset_legs, reset_recess);
-  if (has_ctrl && power_switch) ctrl_cut(power_c, power_body, power_legs, power_recess);
+  if (build == "plate" && has_ctrl && reset_button) ctrl_cut(reset_c, reset_body, reset_legs, reset_recess);
+  if (build == "plate" && has_ctrl && power_switch) ctrl_cut(power_c, power_body, power_legs, power_recess);
   for (h = holes) translate([h[0], h[1], z_plate_bot - 5]) cylinder(d = screw_d, h = plate_t + 10);
   if (cradle) {
     cradle_cuts();
@@ -671,8 +674,8 @@ module assembly() {
   translate([0, 0, explode]) {
     color("lightsteelblue") plate();
     if (show_electronics && cradle) mcu_3d();   // the nice!nano lives in the plate's cradle
-    if (show_electronics && has_ctrl && reset_button) ctrl_3d(reset_c, reset_body, reset_recess, [3.5, 3.5, 3.3]);
-    if (show_electronics && has_ctrl && power_switch) ctrl_3d(power_c, power_body, power_recess, [1.5, 2, 3]);
+    if (show_electronics && build == "plate" && has_ctrl && reset_button) ctrl_3d(reset_c, reset_body, reset_recess, [3.5, 3.5, 3.3]);
+    if (show_electronics && build == "plate" && has_ctrl && power_switch) ctrl_3d(power_c, power_body, power_recess, [1.5, 2, 3]);
     if (has_nv) {
       if (show_electronics) nv_3d();
       color("steelblue") at_nv() translate([0, 0, z_plate_top]) bezel();
