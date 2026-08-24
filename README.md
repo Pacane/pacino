@@ -10,8 +10,19 @@ nRF52840, Kailh hot-swap sockets on Amoeba-King single-key PCBs, and ZMK.
 
 ![Pacino — 5 columns + 2 extra keys, nice!view version](docs/pacino.png)
 
-*The 5-column + 2-extra-keys build with the nice!view display. Renders of every other combination
-are [at the bottom](#variant-gallery).*
+*20 keys per half (40 total): 5 columns + 2 extra keys, with the nice!view display. 145 × 120 mm.*
+
+![Pacino — 6 columns + 2 extra keys, nice!view version](docs/pacino_6col.png)
+
+*23 keys per half (46 total): the optional 6th outer column, same display. 164 × 120 mm.*
+
+![Pacino — 5 columns, no extras, no display](docs/pacino_minimal.png)
+
+*The minimal build — 18 keys per half (36 total), no extra keys, no display. 145 × 120 mm.*
+
+All three are the same scale. The display costs no width: stacked over the nano, a build with it is
+exactly as wide as one without. Renders of every other combination are
+[at the bottom](#variant-gallery).
 
 **The default design:** a cheapino-style 3×5 (+2) + 3-thumb column-stagger layout on a clean
 19.05 mm **MX** grid with **1.25u thumbs**, an **electronics bay** beside the inner column that
