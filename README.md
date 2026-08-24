@@ -15,10 +15,11 @@ are [at the bottom](#variant-gallery).*
 
 **The default design:** a cheapino-style 3×5 (+2) + 3-thumb column-stagger layout on a clean
 19.05 mm **MX** grid with **1.25u thumbs**, an **electronics bay** beside the inner column that
-holds a **LiPo** (in the case floor, inside a locating fence — a 902030 by default), a **nice!nano** (in a
-cradle that is part of the plate, USB out through the wall) and a **reset button and power slide
-switch** in pockets in the plate, laid out for **hand-wiring**. A **nice!view** mount (flush in
-the plate beside the nano, clamped by a screw-down bezel) is in the model but off by default:
+holds a **LiPo** (sunk into a well in the case floor — a 902030 by default), a **nice!nano**
+(**flipped component-side down** in a cradle that is part of the plate, fully enclosed, USB out
+through a notch in the wall) and a **reset button and power slide switch** in pockets in the
+plate, laid out for **hand-wiring**. A **nice!view** mount (flush in the plate *directly over* the
+nano, clamped by a screw-down bezel, so it costs no extra width) is in the model but off by default:
 mounting bosses live in the walls, not in the matrix, and there is ~3 mm under the switch pins.
 A PCB-sandwich build is a switch away.
 
@@ -94,14 +95,16 @@ boards instead (`cavity_from = "pcb"` then follows that board's Edge.Cuts).
 ```
 bay_left / bay_top_y = 86.5 / 61   the bay hangs from its top edge (USB at the top); size is automatic
 battery_type = "902030"            the cell (902030 / 103450 / 604060 / custom), bottom-left of the bay, in a 3 mm fence
-mcu_size   = [18, 33.5]            nice!nano at the top of the bay over the battery (centred, or left with a display)
+mcu_size   = [18, 33]              nice!nano at the top of the bay over the battery (measured on a SuperMini clone)
 nv_pcb     = [14, 36, 1.6]         nice!view, right of the nano, header end down
 ctrl_bay_h = 13                    reset + power strip hung below the bay, switches at its right end
 ```
 
-Stack at the bay with the 902030 (z from the case underside): floor 0–2.5 · battery 2.5–12 ·
-0.3 air · ledge 12.3–13.5 · nice!nano 13.5–15.1 · plate 16–17.5. The model warns if the ledge would
-hit the battery or the board would hit the plate. `part = "section"` renders the stack as a 2D cut.
+Stack at the bay with the 902030 (z from the case underside): floor 0–2.5, with the battery well
+sunk to 1.2 · battery 1.2–10.7 · 2.8 clearance for the nano's components, which now face down ·
+nice!nano PCB 13.5–15.05 · 0.95 air · plate 16–17.5. The 1.3 mm the well recovers pays for the
+component clearance the flip costs, so overall height is unchanged. The model warns if the board's
+components would hit the battery or the board would hit the plate. `part = "section"` renders the stack as a 2D cut.
 
 `battery_type` picks the cell and sizes the bay and the cavity depth (`cavity_depth = 0` = automatic,
 battery thickness + 4): `902030` (20 × 30 × 9, 500 mAh — weeks per charge; 13.5 mm cavity),
@@ -112,30 +115,42 @@ or `custom` with `battery_custom`. Build the 2000 mAh version alongside the defa
 
 ### How the nano and the battery are held
 
-**Battery:** boxed in on all six sides — the 3 mm fence around it (0.5 mm clearance, open only at the
-lead end) stops it sliding, and the nano cradle hanging 0.3 mm above it stops it lifting.
+**Battery:** it drops into a **well sunk 1.3 mm into the case floor** (`battery_well_floor`), whose
+walls locate it on all four sides; with the plate on, the nano 2.8 mm above it keeps it in the well. Set `battery_well_floor = 0`
+instead and it sits on the floor inside a 3 mm printed fence (`battery_fence`, open at the lead end),
+which costs 1.3 mm of case height — the well is the default because the flipped nano needs the room.
 
-**nice!nano / nRF52840 clone:** it sits in a cradle that is part of the plate: rails on three sides
-(open towards the wall), a 1 mm strip under the far edge, and a **latch**: two corner tabs overhang
-the far end of the board by 3 mm (`mcu_overhang`, with a 10 mm gap between them —
-`mcu_overhang_gap` — because SuperMini-style nRF52840 clones carry their reset button centred on
-that end; it stays reachable through the opening) and two tabs beside the USB slot hold the USB-end
-corners down by 1 mm (`mcu_tab`), 0.9 mm above the board so a soldered wire on the corner pads fits
-underneath. The USB end has **no plate ledge** — the clone's B+/B− pads are right there — it rests
-on a **post from the case floor** under the USB connector (`mcu_end_post`). **To fit it: with the
-plate off the case, slide the board into the cradle from the open USB end until it meets the far
-rail.** While the plate is upside down for wiring the board rests on the tabs; closing the case
-drops it 0.2 mm onto the post and the wall closes that end, so the board can move at most 1.3 mm
-and both hold-downs stay engaged. Nothing flexes, nothing to buy. To remove: take the plate off
-and slide it out. A plugged-in cable holds it as well. The four pads along the clone's far edge
-are touched by the outer sliver of the far strip — leave them unsoldered or solder them from the top.
+**nice!nano / nRF52840 clone:** it goes in **upside down** (`mcu_flipped`, the default) — components
+and USB connector facing *into* the case, bare PCB back facing the plate. That protects everything on
+the board, and because the wires now poke straight down through the pads into the bay, the cradle no
+longer needs wire channels along the sides: the plate above it is **solid**, with no opening over the
+MCU at all.
 
-**Wiring the nano:** solder the wires on the top of the board; they run down beside the board
-through the 1.2 mm channel along each long edge (`mcu_side_clearance`) into the bay. Short sections at
-both ends of the rails (`mcu_locate_len`, where the board has no pads) come in to 0.3 mm so the board
-is centred sideways despite the channels. **Set `mcu_size` to your board's real width × length** —
-the latch relies on the pocket being only 1.3 mm longer than the board. The battery
-leads leave the fence at its open end right under the nano.
+It sits in a cradle that is part of the plate: rails on both long sides, open at the USB end,
+holding the board four ways —
+
+- **sideways:** five half-round **crush ribs** per rail (`crush_rib`, 0.6 mm proud, centred on the
+  pocket wall so nothing bulges outward), narrowing the 18.6 mm slot to **17.4 mm** at the ribs. An
+  18.0 mm board goes in with real resistance and shaves them to a custom fit; boards up to ~18.6 mm
+  crush them further. Turn `crush_rib` down for a lighter fit, up for a tighter one.
+- **from below, far end:** two corner tabs under the outer 0.5 mm of the far edge, with a 10 mm gap
+  between them so a SuperMini-style clone's centred reset button stays clear.
+- **from below, USB end:** two posts rising from the **case floor** (`mcu_end_post`), which engage
+  once the plate is screwed down.
+- **from above:** a 6 mm-wide roof pad on the plate over the bare back of the board, leaving it
+  0.2 mm of lift.
+
+**To fit it: with the plate off the case, slide the board into the cradle from the open USB end
+until it meets the far rail.** To remove it, push it back out through the **4 mm eject hole** in the
+far rail. **Set `mcu_size` to your board's real width × length.** Before printing, check your board's
+component side is clear where the cradle touches it: the far corners (outer 0.5 mm, either side of
+the reset button) and the two USB-end corners.
+
+**Wiring the nano:** solder the wires on what is now the underside — they drop straight into the bay,
+no channels or routing needed. The battery leads come up out of the well right below the board.
+
+Setting `mcu_flipped = false` restores the old component-side-up cradle: an opening through the
+plate, wire channels along both long edges, and a USB slot that crosses the plate line.
 
 ### Reset button and power switch
 
@@ -161,20 +176,33 @@ between bay, column 4 and thumb key 2 that the outline smoothing turns into a ho
 ### nice!view
 
 The nice!view has no mounting holes — on a PCB it hangs off its 5-pin header — so here it is
-**clamped**. It sits vertically beside the nano (header end down, the way a Corne shows it) in a
-pocket through the plate, resting on two 1 mm ledges under its long edges that hang from a ring
-below the plate. The PCB top ends up `nv_preload` (0.15 mm) above the plate top; the printed
-**bezel** (`part = "bezel"`, 2.5 mm, window sized to the glass) is screwed down onto two 5 mm
-bosses hanging under the plate with M2 screws — `nv_boss_hole_d = 1.7` for self-tapping into
-PETG (works well; 3 mm of engagement), or 3.2 for heat-set inserts — so it clamps the PCB, not
-the plate. The 12.6 mm opening under the display leaves the solder pads free; the five wires go
-straight down into the bay and across to the nano's pads. Nothing can come loose without
-removing two screws, and nothing relies on a friction or snap fit.
+**clamped**. It sits vertically (header end down, the way a Corne shows it) in a pocket through the
+plate, resting on two 1 mm ledges under its long edges that hang from a ring below the plate. The PCB
+top ends up `nv_preload` (0.15 mm) above the plate top; the printed **bezel** (`part = "bezel"`,
+2.5 mm, window sized to the glass) is screwed down onto two 5 mm bosses hanging under the plate with
+M2 screws — `nv_boss_hole_d = 1.7` for self-tapping into PETG (works well; 3 mm of engagement), or
+3.2 for heat-set inserts — so it clamps the PCB, not the plate. The 12.6 mm opening under the
+display leaves the solder pads free. Nothing can come loose without removing two screws, and
+nothing relies on a friction or snap fit.
 
-Why not on top of the nano like a Corne: the nano drops into its cradle from above, and a display
-frame over it would block that. Side by side costs 2 mm of bay width and keeps everything flush.
-With the display the nano moves left and the bay widens by ~8 mm, so that version has its own case
-(`case_display_*`).
+**It sits directly on top of the nano** (`nv_stacked`, the default). That only works because the
+board is flipped: the plate above it is solid, so the display can take that surface. The bay then
+stays as narrow as the no-display version — the display costs **0 mm of width** instead of 11.6.
+
+Three things follow from stacking, and the model enforces all of them:
+
+- The bezel's screw bosses move from the display's **ends to its sides** — an end boss hangs 3 mm
+  below the plate and would pass straight through the board. On the sides they clear the board by
+  0.8 mm and the cradle pocket by 0.5 mm, landing in free bay space 2.3 mm above the battery.
+- The support ledges are thinned (`nv_ledge_te`, 1.2 → 0.6 mm) so they clear the board's back by
+  0.4 mm — and they then double as the board's hold-down, replacing the cradle roof pad that the
+  display's opening cuts through.
+- The display's wiring end overhangs past the board, so its five wires drop straight into the bay
+  and run to the nano's pads, which now face into the bay.
+
+The cost is servicing: getting the nano out means removing the bezel and lifting the display first.
+Set `nv_stacked = false` for the old side-by-side bay (11.6 mm wider); it is also the automatic
+behaviour if `mcu_flipped` is off, since an unflipped nano needs that plate area for its own opening.
 
 ### Bumpons
 
@@ -249,10 +277,13 @@ combination (PLA is ~70 % stiffer than PETG).
   plate, so it can stay open) and the 1 mm bumpon recesses on the first layer.
 - **Plate:** print top-side down. The cradle, the switch pockets (and the display ring and bezel
   bosses, if enabled) then point up and need no support; the keycap side gets the smooth first
-  layer. The only overhangs are the 1.2 mm-thick cradle ledges and pocket floors (tiny, fine in PETG).
+  layer. The cradle's crush ribs run the full rail height, so they print as part of the rail
+  perimeter. The only overhangs are the cradle's far corner tabs, the roof pad over the board and
+  the pocket floors (tiny, fine in PETG).
 - **Bezel** (if used): window side down.
 - PETG tolerances: pockets have 0.2–0.3 mm clearance, the plate lip 0.2 mm; if your printer runs
-  tight, bump `mcu_clearance` / `ctrl_clearance` to 0.4 and `lip_clearance` to 0.3. Self-tapping M2
+  tight, bump `mcu_clearance` / `ctrl_clearance` to 0.4 and `lip_clearance` to 0.3. The MCU cradle
+  is deliberately an interference fit — tune `crush_rib` (0.6) rather than the clearances. Self-tapping M2
   into 1.7 mm holes is a good fit for PETG; heat-set inserts also work in the 5 mm bosses.
 
 ### What sets the size
@@ -263,13 +294,15 @@ Per half (case outline), against the Bad Temper:
 |---|---|
 | Bad Temper (choc, printed case) | 122 × 94 |
 | badtemper2 MX PCB + 2 mm case | 131 × 107 |
-| this (default, no display) | **144.9 × 120** (17.5 mm to the plate top) |
-| this, with nice!view | 152.5 × 120 |
+| this (default, no display) | **145.0 × 120.2** (17.5 mm to the plate top) |
+| this, with nice!view | 145.0 × 120.2 (the display stacks over the nano) |
 
 Without the display the bay (nano + 902030) is narrower than the thumb cluster, so the **thumb
 cluster** sets the right edge (130.5) and the bottom (−51): the cheapino position plus the portrait
-1.25u fan is +12 mm lower and ~+12 mm further out than the Bad Temper's 1u thumbs. With the display
-the nano + nice!view row (41 mm) sets the bay width instead: +7.6 mm. Margins (`key_margin` 3,
+1.25u fan is +12 mm lower and ~+12 mm further out than the Bad Temper's 1u thumbs. The display no
+longer changes that: stacked over the nano it needs no extra bay width, so both versions are the
+same size. (Side by side — `nv_stacked = false` — the nano + nice!view row is 41.2 mm and pushes
+the right edge to 142.1: **+11.6 mm**.) Margins (`key_margin` 3,
 `wall` 2.4) account for ~2.5 mm per side. A Bad Temper-sized half therefore needs a tighter thumb
 cluster, not a different battery.
 

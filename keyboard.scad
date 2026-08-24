@@ -112,20 +112,28 @@ battery_offset = [0, 0];
 battery_fence = [3, 1.2];
 // sink the battery into the floor, leaving this much plastic under it (0 = off, battery sits on the full
 // floor inside the fence). The well's walls replace the fence, and the case gets ~1.3 mm thinner. The two
-// bay bumpons are skipped when on (no room beside the well).
-battery_well_floor = 0;
-// controller board [width, length] -- measured with calipers: SuperMini nRF52840 clone = [18.1, 33]
-// (nice!nano = [18, 33.5]).  The latch relies on the pocket being ~1.3 mm longer than the board, so measure.
-mcu_size = [18.1, 33];
+// bay bumpons are skipped when on (no room beside the well). Required by mcu_flipped (component clearance).
+battery_well_floor = 1.2;
+// controller board [width, length]: SuperMini / "Pro Micro nRF52840" nice!nano clone, measured 18 x 33
+// (vendors quote 17.8 wide -- the 0.3 mm nub clearance covers both).  nice!nano = [18, 33.5].
+// Sideways the board is located by the nubs at the pocket ends, NOT by the 1.2 mm wire channels along
+// its sides -- the channel span is ~20.4 mm by design.
+mcu_size = [18, 33];
 // PCB thickness (SuperMini measured 1.53; its reset button stands 1.1 mm above the board, centred on the far end)
 mcu_pcb_t = 1.55;
 mcu_offset = [0, 0];
 // board underside above the battery top (plate build; sets the cradle height)
 mcu_above_battery = 1.5;
-// cradle: end clearance, side clearance (a channel for the wires running down beside the board from pads
-// soldered on top), rail thickness, ledge thickness / width
+// mount the controller upside down: components and USB face INTO the case (protected, solid plate above,
+// closed USB window lower in the wall). Wires poke through the pads from the bare top side and exit
+// downward into the case -- no wire channels, pocket = board + 0.6 mm. The onboard reset/LED face down
+// (the external reset button covers reset + bootloader). Needs the battery well (module clearance).
+mcu_flipped = true;
+// cradle: end clearance; side clearance (flipped: rails sit right at the board; unflipped: a 1.2 mm wire
+// channel along each edge for wires soldered on top); rail thickness, ledge thickness / width
 mcu_clearance = 0.3;
-mcu_side_clearance = 1.2;
+mcu_side_clearance = 0.3;
+crush_rib = 0.6;       // how far the crush ribs stand proud of each cradle rail face (flipped only)
 rail_w = 1.5;
 ledge_t = 1.2;
 ledge_w = 2.5;
@@ -197,9 +205,13 @@ ctrl_floor = 1.2;
 ctrl_leg_hole = 3.5;
 
 /* [nice!view] */
-// optional nice!view beside the nano, flush in the plate, clamped by a screw-down bezel (part = "bezel");
-// off by default -- it widens the bay by ~8 mm
+// optional nice!view, flush in the plate, clamped by a screw-down bezel (part = "bezel"); off by default.
+// With a flipped nano the plate above it is solid, so the display can sit DIRECTLY OVER the board instead
+// of beside it -- the bay then stays as narrow as the no-display version (~11.6 mm narrower overall).
+// Stacked, the bezel's screw bosses move from the display's ends to its sides: an end boss would hang
+// straight through the board below.
 nice_view = false;
+nv_stacked = true;      // display over the nano (requires mcu_flipped); false = the old side-by-side bay
 // nice!view PCB [width, length, thickness] -- 36 x 14 x 1.6 per nicekeyboards; measure yours
 nv_pcb = [14, 36, 1.6];
 // display glass [width, length, height above the PCB] and its centre offset along the board (+ = towards the wall)
@@ -303,6 +315,7 @@ battery = battery_type == "103450" ? [34, 50, 10.5] : battery_type == "604060" ?
 has_bay = layout == "grid" && use_bay;
 cradle = build == "plate" && has_bay;
 has_nv = nice_view && cradle;
+nv_over = has_nv && nv_stacked && mcu_flipped;   // the display sits on top of the board, not beside it
 has_ctrl = has_bay && (reset_button || power_switch);   // the control strip exists in both builds;
                                                         // plate pockets only when hand-wired, windows when on a PCB
 
@@ -310,7 +323,7 @@ has_ctrl = has_bay && (reset_button || power_switch);   // the control strip exi
 nano_w = mcu_size[0] + 2 * (mcu_side_clearance + rail_w);
 nv_W   = nv_pcb[0] + 2 * nv_clearance;
 nv_L   = nv_pcb[1] + 2 * nv_clearance;
-elec_w = nano_w + (has_nv ? nv_gap + nv_W + 2 * nv_ring_w : 0);
+elec_w = nano_w + (has_nv && !(nv_stacked && mcu_flipped) ? nv_gap + nv_W + 2 * nv_ring_w : 0);
 nano_l = mcu_size[1] + 2 * mcu_clearance + rail_w + 1;                    // pocket + far rail + gap to the wall
 nv_l   = 1 + nv_boss_d + 1 + nv_L + 1 + nv_boss_d;                         // wall gap, boss, gap, pocket, gap, boss
 // width: battery + margins, or the electronics row + left margin + room for a wall boss on the right
@@ -343,10 +356,13 @@ mcu = has_bay
 usb = has_bay ? [mcu[0], bay_top - 1 + mcu_offset[1]] : (layout == "badtemper" ? badtemper_usb : cheapino_usb);
 
 // nice!view pocket: centre, bezel screw boss y positions, bezel size
-nv_cx = mcu[0] + mcu_size[0] / 2 + mcu_side_clearance + rail_w + nv_gap + nv_ring_w + nv_W / 2;
+nv_cx = nv_over ? mcu[0]
+      : mcu[0] + mcu_size[0] / 2 + mcu_side_clearance + rail_w + nv_gap + nv_ring_w + nv_W / 2;
 nv_cy = bay_top - 1 - nv_boss_d - 1 - nv_L / 2;
-nv_boss_y = [nv_cy + nv_L / 2 + 1 + nv_boss_d / 2, nv_cy - nv_L / 2 - 1 - nv_boss_d / 2];
-nv_bezel_size = [nv_W + 2 * nv_bezel_margin, nv_L + 2 * (1 + nv_boss_d + 1)];
+nv_boss_r  = nv_over ? nv_W / 2 + nv_ring_w + 1 + nv_boss_d / 2 : nv_L / 2 + 1 + nv_boss_d / 2;
+nv_boss_off = nv_over ? [[nv_boss_r, 0], [-nv_boss_r, 0]] : [[0, nv_boss_r], [0, -nv_boss_r]];
+nv_bezel_size = nv_over ? [nv_W + 2 * (1 + nv_boss_d + 1), nv_L + 2 * nv_bezel_margin]
+                        : [nv_W + 2 * nv_bezel_margin, nv_L + 2 * (1 + nv_boss_d + 1)];
 
 // bumpons: the fixed list plus two on the bay (inset 8 mm from its top-right and bottom-right corners)
 bumpons = concat([[x_left - 4, -4], [x_left - 4, 42]], bumpon_positions, has_bay && battery_well_floor == 0
@@ -358,27 +374,44 @@ left_holes = [[x_left - 11.5, 22], [x_left, -11.5]];   // left wall mid-height, 
 holes = layout == "cheapino" ? cheapino_holes : layout == "badtemper" ? badtemper_holes : concat(left_holes, grid_holes, bay_holes);
 
 batt_z0     = battery_well_floor > 0 ? battery_well_floor : floor_t;
+// board height above the battery: flat back needs 1.5 (ledge + air); flipped, the components hang
+// down and need ~2.8 (nRF module + margin)
+mcu_ab_e    = mcu_flipped ? max(mcu_above_battery, 2.8) : mcu_above_battery;
 pcb_lift_e  = pcb_lift > 0 ? pcb_lift : max(2.4, batt_z0 + battery[2] + 0.5 - floor_t - (plate_to_pcb - plate_t) - pcb_t);
 z_pcb_bot   = floor_t + pcb_lift_e;
 z_pcb_top   = z_pcb_bot + pcb_t;
-cavity_d = cavity_depth > 0 ? cavity_depth : max(10, batt_z0 + battery[2] + 4 - floor_t);
+cavity_d = cavity_depth > 0 ? cavity_depth : max(10, batt_z0 + battery[2] + mcu_ab_e + mcu_pcb_t + 0.95 - floor_t);
 z_plate_bot = build == "pcb" ? z_pcb_top + plate_to_pcb - plate_t : floor_t + cavity_d;
 z_plate_top = z_plate_bot + plate_t;
 z_wall_top  = z_plate_bot;
 z_batt_top  = batt_z0 + battery[2];
-z_mcu_bot   = build == "pcb" ? z_pcb_top + mcu_socket_h : z_batt_top + mcu_above_battery;
+z_mcu_bot   = build == "pcb" ? z_pcb_top + mcu_socket_h : z_batt_top + mcu_ab_e;
 z_mcu_top   = z_mcu_bot + mcu_pcb_t;
 z_ledge_bot = z_mcu_bot - ledge_t;
 z_nv_top    = z_plate_top + nv_preload;     // nice!view PCB top
 z_nv_bot    = z_nv_top - nv_pcb[2];
+// stacked, the display's support ledges hang over the board's back, so they are thinned to clear it
+// (they then double as the board's hold-down, replacing the cradle roof pad the display cuts through)
+nv_ledge_te = nv_over ? min(nv_ledge_t, z_nv_bot - z_mcu_top - 0.4) : nv_ledge_t;
 lip_height  = build == "pcb" ? min(lip_h, z_plate_bot - z_pcb_top - 0.3) : lip_h;
 
 if (cradle && z_ledge_bot < z_batt_top)
   echo(str("WARNING: MCU ledge (z=", z_ledge_bot, ") is below the battery top (z=", z_batt_top, ") — raise mcu_above_battery or cavity_depth"));
-if (has_nv && z_nv_bot - nv_ledge_t < z_batt_top + 0.3)
-  echo(str("WARNING: nice!view ledge (z=", z_nv_bot - nv_ledge_t, ") is too close to the battery top (z=", z_batt_top, ")"));
-if (has_nv && nv_cx + nv_W / 2 + nv_ring_w > bay[0] + bay[2] - 1)
+if (has_nv && z_nv_bot - nv_ledge_te < z_batt_top + 0.3)
+  echo(str("WARNING: nice!view ledge (z=", z_nv_bot - nv_ledge_te, ") is too close to the battery top (z=", z_batt_top, ")"));
+if (has_nv && !nv_over && nv_cx + nv_W / 2 + nv_ring_w > bay[0] + bay[2] - 1)
   echo("WARNING: nice!view does not fit beside the nano -- widen the bay");
+if (has_nv && nv_stacked && !mcu_flipped)
+  echo("WARNING: nv_stacked needs mcu_flipped (the plate must be solid over the board) -- falling back to side by side");
+if (nv_over && nv_ledge_te < 0.4)
+  echo(str("WARNING: stacked nice!view leaves only ", nv_ledge_te, " mm of ledge over the board -- raise nv_preload"));
+// stacked, the bezel's screw bosses hang beside the board; an end boss would pass straight through it
+if (nv_over && nv_boss_r - nv_boss_d / 2 < mcu_size[0] / 2 + mcu_side_clearance)
+  echo("WARNING: stacked nice!view bezel bosses overlap the nano below -- widen nv_ring_w or shrink nv_boss_d");
+if (nv_over && (nv_cx + nv_boss_r + nv_boss_d / 2 > bay[0] + bay[2] - 0.5 || nv_cx - nv_boss_r - nv_boss_d / 2 < bay[0] + 0.5))
+  echo("WARNING: stacked nice!view bezel bosses fall outside the bay -- widen the bay");
+if (cradle && mcu_flipped && z_batt_top > z_mcu_bot - 2.5)
+  echo(str("WARNING: flipped MCU components (down to z=", z_mcu_bot - 2.5, ") hit the battery top (z=", z_batt_top, ") — set battery_well_floor"));
 if (cradle && z_mcu_top > z_plate_bot)
   echo(str("WARNING: MCU board top (z=", z_mcu_top, ") is above the plate underside (z=", z_plate_bot, ") — increase cavity_depth"));
 
@@ -444,7 +477,7 @@ module plate_2d() difference() {
   for (k = keys) at(k) switch_cutout_2d();
   for (h = holes) translate(h) circle(d = screw_d);
   if (len(plate_windows) > 0 || build == "pcb") plate_windows_2d();   // (guarded: an empty operand breaks FreeCAD)
-  if (cradle) cradle_opening_2d();
+  if (cradle && !mcu_flipped) cradle_opening_2d();
 }
 
 // ---------------------------------------------------------------- 3D parts
@@ -456,8 +489,12 @@ module wall_cut(x, y, ang, w, h, z0) {
 }
 
 module wall_cutouts() {
+  // flipped: an open-top notch (the solid plate bridges it) — a closed window would leave a
+  // sub-mm sliver under the wall top, which prints badly
+  usb_z0 = cradle && mcu_flipped ? z_mcu_bot - 3.2 - 1.9 : z_mcu_top + usb_cutout[2];
   if (usb_cutout[0] > 0)
-    wall_cut(usb[0], usb[1], mcu[2] + 90, usb_cutout[0], usb_cutout[1], z_mcu_top + usb_cutout[2]);
+    wall_cut(usb[0], usb[1], mcu[2] + 90, usb_cutout[0],
+             cradle && mcu_flipped ? z_wall_top - usb_z0 + 1 : usb_cutout[1], usb_z0);
   if (len(extra_cutouts) > 0) for (c = extra_cutouts) wall_cut(c[0], c[1], c[2], c[3], c[4], c[5]);
 }
 
@@ -475,10 +512,17 @@ module key_pcb_posts() if (build == "plate" && key_pcbs && key_pcb_post[0] > 0)
     translate([sx * key_pcb_post_x - key_pcb_post[0] / 2, sy * (py / 2 - key_pcb_post[1] / 2) - key_pcb_post[1] / 2, floor_t - eps])
       cube([key_pcb_post[0], key_pcb_post[1], z_key_pcb_bot - key_pcb_post_gap - floor_t + eps]);
 
-// post from the floor under the controller's USB end (centre of the board, under the connector)
-module mcu_end_post() if (cradle && mcu_end_post[0] > 0) at_mcu()
+// floor support at the controller's USB end (the far end stands on the plate's corner tabs / ledge):
+// unflipped, one post under the connector's centre; flipped, two posts under the component side's outer
+// corners at |x| 5.5-8.5 (beside the hanging USB connector and its shell lugs)
+module mcu_end_post() if (cradle && mcu_end_post[0] > 0) at_mcu() {
+  if (mcu_flipped) {
+    for (s = [-1, 1]) translate([s > 0 ? 5.5 : -8.5, cr_yb - 1.6, floor_t - eps])
+      cube([3, 1.4, z_mcu_bot - key_pcb_post_gap - floor_t + eps]);
+  } else
   translate([-mcu_end_post[0] / 2, cr_yb - 1 - mcu_end_post[1], floor_t - eps])
     cube([mcu_end_post[0], mcu_end_post[1], z_mcu_bot - key_pcb_post_gap - floor_t + eps]);
+}
 
 module case_bottom() difference() {
   boss_top = build == "pcb" ? z_pcb_bot : z_plate_bot;
@@ -504,21 +548,21 @@ module case_bottom() difference() {
 module at_nv() translate([nv_cx, nv_cy]) children();
 
 module nv_solid() at_nv() {
-  translate([-(nv_W / 2 + nv_ring_w), -(nv_L / 2 + nv_ring_w), z_nv_bot - nv_ledge_t])
-    cube([nv_W + 2 * nv_ring_w, nv_L + 2 * nv_ring_w, z_plate_bot - (z_nv_bot - nv_ledge_t) + eps]);
-  for (y = nv_boss_y) translate([0, y - nv_cy, z_plate_bot - nv_boss_h]) cylinder(d = nv_boss_d, h = nv_boss_h + eps);
+  translate([-(nv_W / 2 + nv_ring_w), -(nv_L / 2 + nv_ring_w), z_nv_bot - nv_ledge_te])
+    cube([nv_W + 2 * nv_ring_w, nv_L + 2 * nv_ring_w, z_plate_bot - (z_nv_bot - nv_ledge_te) + eps]);
+  for (b = nv_boss_off) translate([b[0], b[1], z_plate_bot - nv_boss_h]) cylinder(d = nv_boss_d, h = nv_boss_h + eps);
 }
 
 module nv_cuts() at_nv() {
   translate([-nv_W / 2, -nv_L / 2, z_nv_bot]) cube([nv_W, nv_L, 20]);                           // PCB pocket
   translate([-(nv_W / 2 - nv_ledge_w), -nv_L / 2, -1]) cube([nv_W - 2 * nv_ledge_w, nv_L, 30]);  // through opening (wires, pads)
-  for (y = nv_boss_y) translate([0, y - nv_cy, z_plate_bot - nv_boss_h - 1]) cylinder(d = nv_boss_hole_d, h = nv_boss_h + plate_t + 2);
+  for (b = nv_boss_off) translate([b[0], b[1], z_plate_bot - nv_boss_h - 1]) cylinder(d = nv_boss_hole_d, h = nv_boss_h + plate_t + 2);
 }
 
 module bezel_2d() difference() {
   offset(r = nv_bezel_r) offset(delta = -nv_bezel_r) rect(nv_bezel_size[0], nv_bezel_size[1]);
   translate([0, nv_glass_shift]) rect(nv_glass[0] + 2 * nv_window_clearance, nv_glass[1] + 2 * nv_window_clearance);
-  for (y = nv_boss_y) translate([0, y - nv_cy]) circle(d = nv_bezel_hole_d);
+  for (b = nv_boss_off) translate(b) circle(d = nv_bezel_hole_d);
 }
 module bezel() linear_extrude(nv_bezel_t) bezel_2d();
 
@@ -535,12 +579,21 @@ cr_ywall = cr_yb + 1 - lip_clearance;              // just inside the wall line
 cr_tab_w = cr_W / 2 - usb_cutout[0] / 2 - 0.5;     // corner tabs beside the USB slot
 
 module cradle_solid() at_mcu() {
-  translate([0, 0, z_ledge_bot]) linear_extrude(z_plate_bot - z_ledge_bot + eps) difference() {
+  rail_z0 = mcu_flipped ? z_mcu_bot - 0.5 : z_ledge_bot;   // flipped: rails stop just below the board so
+  translate([0, 0, rail_z0]) linear_extrude(z_plate_bot - rail_z0 + eps) difference() {         // wire tails exit underneath them
     translate([-(cr_W / 2 + rail_w), cr_yfar - rail_w]) square([cr_W + 2 * rail_w, cr_ywall - cr_yfar + rail_w]);
     translate([-cr_W / 2, cr_yfar]) square([cr_W, cr_ywall - cr_yfar + 1]);
   }
+  if (mcu_flipped) {
+    // far end: two corner tabs under the component side's outer 0.5 mm (clear of the edge-centred reset
+    // and inboard of nothing else; eyeball your board's far corners before printing)
+    for (s = [-1, 1]) translate([s > 0 ? 5 : -8.8, cr_yfar - 1, z_mcu_bot - ledge_t]) cube([3.8, mcu_clearance + 1.5, ledge_t + eps]);
+    // roof pad: centre strip over the bare back, limiting lift to 0.2
+    translate([-3, cr_yfar, z_mcu_top + 0.2]) cube([6, cr_ywall - cr_yfar, z_plate_bot - (z_mcu_top + 0.2) + eps]);
+  } else
   translate([0, 0, z_ledge_bot]) linear_extrude(ledge_t)
     translate([-cr_W / 2, cr_yfar]) square([cr_W, mcu_clearance + mcu_far_ledge]);              // far end: strip under the edge only
+  if (!mcu_flipped)
   translate([-cr_W / 2, cr_yfar, z_mcu_top + mcu_lift_gap])                                          // cap
     cube([cr_W, cr_ywall - cr_yfar, z_plate_bot - (z_mcu_top + mcu_lift_gap) + eps]);
 }
@@ -556,6 +609,13 @@ module cradle_opening_2d() at_mcu() difference() {
 }
 
 module cradle_cuts() at_mcu() {
+  if (mcu_flipped)
+    difference() {   // board tunnel under the solid plate, open at the USB end; the roof pad stays
+      translate([-cr_W / 2, cr_yfar, z_mcu_bot]) cube([cr_W, cr_ywall + 1 - cr_yfar, z_plate_bot - z_mcu_bot - eps]);
+      translate([-3 - 0.01, cr_yfar - 1, z_mcu_top + 0.2 - 0.01]) cube([6.02, cr_ywall - cr_yfar + 2, 20]);
+      // poke hole through the far rail to push the board out (plate off)
+    }
+  else
   difference() {   // board pocket, open at the USB end, minus the locating nubs at both ends of the wire channels
     translate([-cr_W / 2, cr_yfar, z_mcu_bot]) cube([cr_W, cr_ywall + 1 - cr_yfar, z_mcu_top + mcu_lift_gap - z_mcu_bot]);
     if (mcu_locate_len > 0) for (s = [-1, 1], e = [-1, 1])
@@ -563,7 +623,9 @@ module cradle_cuts() at_mcu() {
                  e > 0 ? cr_yb - mcu_locate_len : -cr_yb - mcu_clearance - 1, z_mcu_bot - 1])
         cube([cr_W / 2 - mcu_size[0] / 2 - mcu_clearance + 1, mcu_locate_len + mcu_clearance + 1, 30]);
   }
+  if (mcu_flipped) translate([0, cr_yfar - rail_w / 2, z_mcu_bot + 0.8]) rotate([90, 0, 0]) cylinder(d = 4, h = rail_w + 3, center = true);
   z0 = z_mcu_top + mcu_lift_gap - eps;
+  if (!mcu_flipped)
   difference() {   // opening through the cap and the plate, built from cubes (FreeCAD cannot extrude the notched 2D shape)
     union() {
       translate([-cr_W / 2, -cr_yb + mcu_overhang, z0]) cube([cr_W, cr_ywall - (-cr_yb + mcu_overhang) + 0.01, 20]);
@@ -599,7 +661,22 @@ module plate_ribs_3d() translate([0, 0, z_plate_bot - rib_height]) linear_extrud
   for (h = holes) translate(h) circle(d = boss_d + 1);
 }
 
-module plate() difference() {
+// crush ribs: five half-round ribs per rail face, each centred ON the pocket wall so its outer
+// half is buried in the rail (nothing bulges outward) and exactly crush_rib protrudes into the
+// slot. Full rail height, so each is a clean perimeter deviation the slicer reproduces; the round
+// profile is its own lead-in and concentrates the crush. Slot at the ribs = cr_W - 2*crush_rib.
+// (No hull() here: FreeCAD implements hull by shelling out to the openscad binary and fails.)
+module cradle_ribs() at_mcu()
+  for (s = [-1, 1], yy = [4, 10, 16, 22, 28])
+    translate([s * cr_W / 2, cr_yfar + yy, z_mcu_bot - 0.5])
+      cylinder(r = crush_rib, h = z_plate_bot - (z_mcu_bot - 0.5) + eps, $fn = 24);
+
+module plate() {
+  plate_hull();
+  if (cradle && mcu_flipped && crush_rib > 0) cradle_ribs();   // after the cuts: they live inside the board tunnel
+}
+
+module plate_hull() difference() {
   union() {
     translate([0, 0, z_plate_bot]) linear_extrude(plate_t) plate_2d();
     if (plate_ribs) plate_ribs_3d();
@@ -622,7 +699,7 @@ module plate() difference() {
   for (h = holes) translate([h[0], h[1], z_plate_bot - 5]) cylinder(d = screw_d, h = plate_t + 10);
   if (cradle) {
     cradle_cuts();
-    wall_cutouts();   // the USB plug passes through the plate level too
+    if (!mcu_flipped) wall_cutouts();   // unflipped only: the USB plug crosses the plate level
   }
 }
 
@@ -647,7 +724,8 @@ module switch_3d(k) at(k) {
 
 module mcu_3d() {
   color("darkolivegreen", 0.9) translate([0, 0, z_mcu_bot]) linear_extrude(mcu_pcb_t) mcu_2d();
-  color("silver") at_mcu() translate([-4.5, mcu[4] / 2 - 7.35 + 1.3, z_mcu_top]) cube([9, 7.35, 3.2]);   // USB-C, overhangs 1.3
+  color("silver") at_mcu() translate([-4.5, mcu[4] / 2 - 7.35 + 1.3, cradle && mcu_flipped ? z_mcu_bot - 3.2 : z_mcu_top])
+    cube([9, 7.35, 3.2]);   // USB-C (below the board when flipped)
 }
 
 module nv_3d() at_nv() {
