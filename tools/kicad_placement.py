@@ -27,7 +27,7 @@ rst, pwr = arr("reset"), arr("power")
 subprocess.run([OPENSCAD, "--backend=Manifold", "-q", "-D", 'part="pcb_outline_2d"', *args,
                 "-o", "docs/pcb/pacino_edge_cuts.dxf", "keyboard.scad"], check=True)
 with open("docs/pcb/pacino_placement.csv", "w", newline="") as f:
-    w = csv.writer(f)
+    w = csv.writer(f, lineterminator="\n")   # LF, not csv's default CRLF
     w.writerow(["type", "ref", "x_model", "y_model", "rot_deg", "x_kicad", "y_kicad", "note"])
     for i, k in enumerate(keys):
         w.writerow(["switch", "SW%d" % (i + 1), k[0], k[1], k[2], round(KX0 + k[0], 3), round(KY0 - k[1], 3),
