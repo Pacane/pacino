@@ -47,7 +47,8 @@ layouts/cheapino.scad    generated from ../cheapino/pcb/cheapino.kicad_pcb  (exa
 layouts/badtemper.scad   generated from ../badtemper2/BadTemper.kicad_pcb
 tools/kicad_layout.py    KiCad .kicad_pcb -> layouts/*.scad  (switches, holes, MCU, Edge.Cuts polygon)
 tools/pcb_gen.py         the slim build's PCBs: model -> pcb/*/ boards + footprint libs + gerbers
-pcb/flat/  pcb/pod/     those two KiCad projects (generated, DRC-clean; each has its own README)
+pcb/flat/  pcb/pod/     those two KiCad projects (generated, DRC-clean; each has its own README,
+                         gerber zip and renders)
 tools/csg2step.py        OpenSCAD .csg -> STEP, runs inside FreeCAD
 tools/svg_polygon.py     helper: bakes the cavity outline to a polygon for the FreeCAD pass
 build.sh                 builds everything into out/
@@ -383,12 +384,17 @@ and a `layout` option in `keyboard.scad` the way `cheapino`/`badtemper` are wire
 holds two complete, DRC-clean KiCad 9 projects with gerbers, generated from this model by
 [`tools/pcb_gen.py`](tools/pcb_gen.py).
 
-![the Pacino PCB](docs/pcb/pacino_pcb_iso.png)
+![the Pacino PCB](pcb/flat/pacino_flat_iso.png)
 
-![the Pacino PCB, both faces](docs/pcb/pacino_pcb.png)
+<p>
+<img src="pcb/flat/pacino_flat_top.png" width="49%" alt="front">
+<img src="pcb/flat/pacino_flat_bottom.png" width="49%" alt="back">
+</p>
 
-*The same board twice: front, and back. Flip it over and the bay swaps sides — that is the right
-half. Each face's silkscreen names the half you build on it.*
+*The same board from both sides. Flip it over and the bay swaps sides — that is the right half. Each
+face's silkscreen names the half you build on it, and outlines its hot-swap sockets the way round
+they go in on that half. These renders come out of `tools/pcb_gen.py` with the board, so they are
+always the board in the repo rather than a picture of an older one.*
 
 **11.5 mm to the plate top** — the floor for any MX build, and 6 mm thinner than hand-wired. The
 stack is 2.5 floor + 2.4 (hot-swap sockets) + 1.6 board + 5.0 (MX plate-to-PCB, fixed by the
