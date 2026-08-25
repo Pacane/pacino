@@ -1,0 +1,27 @@
+#include "pacino_pcb.dtsi"
+
+/*
+ * The same board, flipped: every matrix hole is now on the controller's other pin row, so the row
+ * and column pins are the mirror-image set of the left half's.
+ */
+
+&default_transform {
+    col-offset = <5>;
+};
+
+&kscan0 {
+    row-gpios
+        = <&pro_micro 2 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>    /* row 0: top    */
+        , <&pro_micro 3 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>    /* row 1: home   */
+        , <&pro_micro 4 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>    /* row 2: bottom */
+        , <&pro_micro 5 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>    /* row 3: extras */
+        , <&pro_micro 9 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>    /* row 4: thumbs */
+        ;
+    col-gpios
+        = <&pro_micro 10 GPIO_ACTIVE_HIGH>   /* col 5: inner  */
+        , <&pro_micro 18 GPIO_ACTIVE_HIGH>   /* col 6: index  */
+        , <&pro_micro 19 GPIO_ACTIVE_HIGH>   /* col 7: middle */
+        , <&pro_micro 20 GPIO_ACTIVE_HIGH>   /* col 8: ring   */
+        , <&pro_micro 21 GPIO_ACTIVE_HIGH>   /* col 9: pinky  */
+        ;
+};

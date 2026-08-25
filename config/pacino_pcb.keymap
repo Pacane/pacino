@@ -1,0 +1,2 @@
+/* The PCB build uses the same 40-key layout as the hand-wired one. */
+#include "pacino.keymap"

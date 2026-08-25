@@ -1,0 +1,42 @@
+/*
+ * Pacino, PCB build (the slim variant) -- same 5-column + 2-extra + 3-thumb layout and the same
+ * matrix as the hand-wired `pacino` shield, but the pins differ BETWEEN THE HALVES.
+ *
+ * The board is reversible: one design, flipped over for the right half.  Flipping swaps the
+ * controller's two pin rows (a hole that is the left pin row on one half is the right pin row on
+ * the other) without changing the position along a row, so every matrix net lands on a different
+ * GPIO depending on which half you built.  The ten holes were picked so that both of each hole's
+ * pins are usable and neither is pro_micro 1/14/15/16 -- the nice!view's CS/MISO/SCK/MOSI stay free
+ * on BOTH halves.  tools/pcb_gen.py prints these two pin lists every time it builds the board.
+ *
+ * The hand-wired build keeps its own `pacino` shield; do not cross the two.
+ */
+
+#include <dt-bindings/zmk/matrix_transform.h>
+
+/ {
+    chosen {
+        zmk,kscan = &kscan0;
+        zmk,matrix-transform = &default_transform;
+    };
+
+    default_transform: keymap_transform_0 {
+        compatible = "zmk,matrix-transform";
+        columns = <10>;
+        rows = <5>;
+        map = <
+RC(0,0) RC(0,1) RC(0,2) RC(0,3) RC(0,4)      RC(0,5) RC(0,6) RC(0,7) RC(0,8) RC(0,9)
+RC(1,0) RC(1,1) RC(1,2) RC(1,3) RC(1,4)      RC(1,5) RC(1,6) RC(1,7) RC(1,8) RC(1,9)
+RC(2,0) RC(2,1) RC(2,2) RC(2,3) RC(2,4)      RC(2,5) RC(2,6) RC(2,7) RC(2,8) RC(2,9)
+        RC(3,1) RC(3,2)                              RC(3,7) RC(3,8)
+                RC(4,2) RC(4,3) RC(4,4)      RC(4,5) RC(4,6) RC(4,7)
+        >;
+    };
+
+    kscan0: kscan {
+        compatible = "zmk,kscan-gpio-matrix";
+        diode-direction = "col2row";
+        wakeup-source;
+        /* row-gpios and col-gpios are per half -- see the two overlays */
+    };
+};

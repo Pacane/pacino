@@ -1,0 +1,18 @@
+#include "pacino_pcb.dtsi"
+
+&kscan0 {
+    row-gpios
+        = <&pro_micro 21 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* row 0: top    */
+        , <&pro_micro 20 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* row 1: home   */
+        , <&pro_micro 19 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* row 2: bottom */
+        , <&pro_micro 18 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* row 3: extras */
+        , <&pro_micro 10 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* row 4: thumbs */
+        ;
+    col-gpios
+        = <&pro_micro 2 GPIO_ACTIVE_HIGH>    /* col 0: pinky  */
+        , <&pro_micro 3 GPIO_ACTIVE_HIGH>    /* col 1: ring   */
+        , <&pro_micro 4 GPIO_ACTIVE_HIGH>    /* col 2: middle */
+        , <&pro_micro 5 GPIO_ACTIVE_HIGH>    /* col 3: index  */
+        , <&pro_micro 9 GPIO_ACTIVE_HIGH>    /* col 4: inner  */
+        ;
+};

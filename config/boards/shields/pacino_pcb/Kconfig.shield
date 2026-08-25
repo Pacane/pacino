@@ -1,0 +1,5 @@
+config SHIELD_PACINO_PCB_LEFT
+	def_bool $(shields_list_contains,pacino_pcb_left)
+
+config SHIELD_PACINO_PCB_RIGHT
+	def_bool $(shields_list_contains,pacino_pcb_right)

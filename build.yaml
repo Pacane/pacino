@@ -10,5 +10,11 @@ include:
   #   shield: pacino_left nice_view_adapter nice_view
   # - board: nice_nano//zmk
   #   shield: pacino_right nice_view_adapter nice_view
+  # the slim PCB build (pcb/) is its own shield: the reversible board puts the matrix on different
+  # pins on each half, so it cannot share pacino_left / pacino_right
+  - board: nice_nano//zmk
+    shield: pacino_pcb_left
+  - board: nice_nano//zmk
+    shield: pacino_pcb_right
   - board: nice_nano//zmk
     shield: settings_reset
