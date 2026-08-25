@@ -9,17 +9,19 @@ Print the plate top-side down, the case as-is; hardware and assembly notes are i
 |---|---|---|---|---|---|---|
 | [`5col_noextra_bat902030_nodisplay`](5col_noextra_bat902030_nodisplay/) | 5 | 18 | 902030 | no | 145 × 120 | ![](5col_noextra_bat902030_nodisplay/preview_top.png) |
 | [`5col_noextra_bat902030_display`](5col_noextra_bat902030_display/) | 5 | 18 | 902030 | yes | 145 × 120 | ![](5col_noextra_bat902030_display/preview_top.png) |
-| [`5col_noextra_bat103450_nodisplay`](5col_noextra_bat103450_nodisplay/) | 5 | 18 | 103450 | no | 147 × 120 | ![](5col_noextra_bat103450_nodisplay/preview_top.png) |
-| [`5col_noextra_bat103450_display`](5col_noextra_bat103450_display/) | 5 | 18 | 103450 | yes | 147 × 120 | ![](5col_noextra_bat103450_display/preview_top.png) |
+| [`5col_noextra_bat103450_nodisplay`](5col_noextra_bat103450_nodisplay/) | 5 | 18 | 103450 | no | 148 × 120 | ![](5col_noextra_bat103450_nodisplay/preview_top.png) |
+| [`5col_noextra_bat103450_display`](5col_noextra_bat103450_display/) | 5 | 18 | 103450 | yes | 148 × 120 | ![](5col_noextra_bat103450_display/preview_top.png) |
 | [`5col_extra2_bat902030_nodisplay`](5col_extra2_bat902030_nodisplay/) | 5 | 20 | 902030 | no | 145 × 120 | ![](5col_extra2_bat902030_nodisplay/preview_top.png) |
 | [`5col_extra2_bat902030_display`](5col_extra2_bat902030_display/) | 5 | 20 | 902030 | yes | 145 × 120 | ![](5col_extra2_bat902030_display/preview_top.png) |
-| [`5col_extra2_bat103450_nodisplay`](5col_extra2_bat103450_nodisplay/) | 5 | 20 | 103450 | no | 147 × 120 | ![](5col_extra2_bat103450_nodisplay/preview_top.png) |
-| [`5col_extra2_bat103450_display`](5col_extra2_bat103450_display/) | 5 | 20 | 103450 | yes | 147 × 120 | ![](5col_extra2_bat103450_display/preview_top.png) |
+| [`5col_extra2_bat103450_nodisplay`](5col_extra2_bat103450_nodisplay/) | 5 | 20 | 103450 | no | 148 × 120 | ![](5col_extra2_bat103450_nodisplay/preview_top.png) |
+| [`5col_extra2_bat103450_display`](5col_extra2_bat103450_display/) | 5 | 20 | 103450 | yes | 148 × 120 | ![](5col_extra2_bat103450_display/preview_top.png) |
 | [`6col_noextra_bat902030_nodisplay`](6col_noextra_bat902030_nodisplay/) | 6 | 21 | 902030 | no | 164 × 120 | ![](6col_noextra_bat902030_nodisplay/preview_top.png) |
 | [`6col_noextra_bat902030_display`](6col_noextra_bat902030_display/) | 6 | 21 | 902030 | yes | 164 × 120 | ![](6col_noextra_bat902030_display/preview_top.png) |
-| [`6col_noextra_bat103450_nodisplay`](6col_noextra_bat103450_nodisplay/) | 6 | 21 | 103450 | no | 166 × 120 | ![](6col_noextra_bat103450_nodisplay/preview_top.png) |
-| [`6col_noextra_bat103450_display`](6col_noextra_bat103450_display/) | 6 | 21 | 103450 | yes | 166 × 120 | ![](6col_noextra_bat103450_display/preview_top.png) |
+| [`6col_noextra_bat103450_nodisplay`](6col_noextra_bat103450_nodisplay/) | 6 | 21 | 103450 | no | 167 × 120 | ![](6col_noextra_bat103450_nodisplay/preview_top.png) |
+| [`6col_noextra_bat103450_display`](6col_noextra_bat103450_display/) | 6 | 21 | 103450 | yes | 167 × 120 | ![](6col_noextra_bat103450_display/preview_top.png) |
 | [`6col_extra2_bat902030_nodisplay`](6col_extra2_bat902030_nodisplay/) | 6 | 23 | 902030 | no | 164 × 120 | ![](6col_extra2_bat902030_nodisplay/preview_top.png) |
 | [`6col_extra2_bat902030_display`](6col_extra2_bat902030_display/) | 6 | 23 | 902030 | yes | 164 × 120 | ![](6col_extra2_bat902030_display/preview_top.png) |
-| [`6col_extra2_bat103450_nodisplay`](6col_extra2_bat103450_nodisplay/) | 6 | 23 | 103450 | no | 166 × 120 | ![](6col_extra2_bat103450_nodisplay/preview_top.png) |
-| [`6col_extra2_bat103450_display`](6col_extra2_bat103450_display/) | 6 | 23 | 103450 | yes | 166 × 120 | ![](6col_extra2_bat103450_display/preview_top.png) |
+| [`6col_extra2_bat103450_nodisplay`](6col_extra2_bat103450_nodisplay/) | 6 | 23 | 103450 | no | 167 × 120 | ![](6col_extra2_bat103450_nodisplay/preview_top.png) |
+| [`6col_extra2_bat103450_display`](6col_extra2_bat103450_display/) | 6 | 23 | 103450 | yes | 167 × 120 | ![](6col_extra2_bat103450_display/preview_top.png) |
+| [`5col_extra2_bat303040_pcb_flat`](5col_extra2_bat303040_pcb_flat/) | 5 | 20 | 303040, flat (under the board) | no | 145 × 120 | ![](5col_extra2_bat303040_pcb_flat/preview_top.png) |
+| [`5col_extra2_bat902030_pcb_pod`](5col_extra2_bat902030_pcb_pod/) | 5 | 20 | 902030, in a plate pod | no | 145 × 120 | ![](5col_extra2_bat902030_pcb_pod/preview_top.png) |

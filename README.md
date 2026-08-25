@@ -3,6 +3,8 @@
 A hand-wired wireless split keyboard you print, screw together and solder — no main PCB.
 Parametric OpenSCAD case + switch plate, with a build pipeline that produces **real STEP solids**
 (via FreeCAD) so everything is editable in Fusion 360 as B-rep geometry, not as a mesh.
+If you would rather not hand-wire it, the same design has a **slim build**: an 11.5 mm case around a
+reversible PCB that is generated from this model and ready to order — [see below](#the-slim-build-a-real-pcb-115-mm).
 
 Named after (and descended from) the [cheapino](https://github.com/tompi/cheapino), whose column
 stagger and thumb-cluster geometry it borrows; hardware-wise it runs a nice!nano-compatible
@@ -24,6 +26,11 @@ All three are the same scale. The display costs no width: stacked over the nano,
 exactly as wide as one without. Renders of every other combination are
 [at the bottom](#variant-gallery).
 
+![Pacino — the slim PCB build](docs/pacino_slim.png)
+
+*The slim build: the same 40 keys over a reversible PCB, **11.5 mm** to the plate top instead of 17.5,
+and flat — the cell lies in a well under the board. The controller sits flush in the plate window.*
+
 **The default design:** a cheapino-style 3×5 (+2) + 3-thumb column-stagger layout on a clean
 19.05 mm **MX** grid with **1.25u thumbs**, an **electronics bay** beside the inner column that
 holds a **LiPo** (sunk into a well in the case floor — a 902030 by default), a **nice!nano**
@@ -39,6 +46,8 @@ keyboard.scad            the model — all parameters at the top, Customizer-fri
 layouts/cheapino.scad    generated from ../cheapino/pcb/cheapino.kicad_pcb  (exact positions, if you want them)
 layouts/badtemper.scad   generated from ../badtemper2/BadTemper.kicad_pcb
 tools/kicad_layout.py    KiCad .kicad_pcb -> layouts/*.scad  (switches, holes, MCU, Edge.Cuts polygon)
+tools/pcb_gen.py         the slim build's PCBs: model -> pcb/*/ boards + footprint libs + gerbers
+pcb/flat/  pcb/pod/     those two KiCad projects (generated, DRC-clean; each has its own README)
 tools/csg2step.py        OpenSCAD .csg -> STEP, runs inside FreeCAD
 tools/svg_polygon.py     helper: bakes the cavity outline to a polygon for the FreeCAD pass
 build.sh                 builds everything into out/
@@ -95,7 +104,7 @@ half grows to 164 mm wide. Build it alongside the default with
 wall and the whole matrix area is free for diodes and wires (each boss was checked for ≥ 2 mm to
 every switch body, ≥ 1 mm to the battery, and clear of the MCU cradle and the keycap footprints
 so the screw heads are reachable). Under the plate there are 10 mm: MX body + pins take 8.3 from
-the plate top, leaving ~3 mm under the pins. The bay has 4 mm around the battery for routing,
+the plate top, leaving ~3 mm under the pins. The bay has ~8 mm of floor to the right of the battery and 4 mm below it for routing,
 and its open fence end faces the nice!nano.
 
 Set `layout = "cheapino"` or `"badtemper"` to use the exact positions extracted from those
@@ -119,8 +128,7 @@ components would hit the battery or the board would hit the plate. `part = "sect
 
 `battery_type` picks the cell and sizes the bay and the cavity depth (`cavity_depth = 0` = automatic,
 battery thickness + 4): `902030` (20 × 30 × 9, 500 mAh — weeks per charge; 13.5 mm cavity),
-`103450` (34 × 50 × 10, 2000 mAh; 44 × 60 bay, 14.5 mm cavity, +1 mm case height; the outline does
-not change because the thumb cluster reaches further anyway), `604060` (40 × 60 × 6; 10.5 mm cavity),
+`103450` (34 × 50 × 10, 2000 mAh; 45 × 60 bay, 14.5 mm cavity, +1 mm case height and +3 mm width — the bay reaches past the thumb cluster), `604060` (40 × 60 × 6; 10.5 mm cavity),
 or `custom` with `battery_custom`. Build the 2000 mAh version alongside the default with
 `SUFFIX=_2000mah SCAD_ARGS='-D battery_type="103450"' ./build.sh` → `case_2000mah_*`, `plate_2000mah_*`.
 
@@ -217,10 +225,19 @@ behaviour if `mcu_flipped` is off, since an unflipped nano needs that plate area
 
 ### Bumpons
 
-Eight 10.3 mm × 1 mm recesses in the underside for 10 mm self-adhesive rubber feet
-(`bumpon_d`, `bumpon_clearance`, `bumpon_depth`; `bumpon_positions` for the six under the key block
-and thumb cluster, two more follow the bay's top-right and bottom-right corners automatically). The
-floor is 2.5 mm so 1.5 mm remains under each recess. A 56.6 mm × 1 mm disc recess for a MagSafe
+Eight 10.6 mm × 1 mm recesses in the underside for 10 mm self-adhesive rubber feet (`bumpon_d`,
+`bumpon_clearance`, `bumpon_depth`; `bumpon_positions` for the four under the key block and thumb
+cluster, two on the left edge follow the outer column, and two are placed on the bay: 8 mm in from
+its top-right corner, and 12 mm up from the bottom of the control strip on the right). The floor is
+2.5 mm so 1.5 mm remains under each recess.
+
+The two bay feet and the **battery well** compete for the same floor: the well is already 1.3 mm
+into it, so a recess over the well would leave 0.2 mm. With a well the cell therefore sits against
+the bay's *left* wall (which doubles as the well's side) instead of 5 mm from it, keeping the bay's
+right-hand corners clear, and the bay is sized so the top-right foot always fits beside the cell with
+a millimetre of wall outside its recess. Each bay foot then moves outward only by what its well
+forces — a couple of millimetres — and the model warns if one has nowhere to go. The wider cells pay
+for it in width: the 103450's bay is 45 mm instead of 44, and its case 148 mm. A 56.6 mm × 1 mm disc recess for a MagSafe
 magnet ring sits under the index/middle columns (`magsafe_d`, `magsafe_pos`; 0 = none).
 `out/preview_bottom.png` shows them all.
 
@@ -307,6 +324,7 @@ Per half (case outline), against the Bad Temper:
 | badtemper2 MX PCB + 2 mm case | 131 × 107 |
 | this (default, no display) | **145.0 × 120.2** (17.5 mm to the plate top) |
 | this, with nice!view | 145.0 × 120.2 (the display stacks over the nano) |
+| this, slim PCB build | 145.0 × 120.2 (**11.5 mm** to the plate top, flat; or the same with a pod for a 902030) |
 
 Without the display the bay (nano + 902030) is narrower than the thumb cluster, so the **thumb
 cluster** sets the right edge (130.5) and the bottom (−51): the cheapino position plus the portrait
@@ -339,9 +357,12 @@ cluster, not a different battery.
   from the floor to the plate underside with 3.3 mm holes for M2×4×3.5 heat-set inserts
   (`boss_hole_d = 1.7` for self-tappers); M2×6 screws through the plate. `cavity_depth = 10`
   leaves room for MX bodies + pins + wiring and the battery/cradle stack.
-- `build = "pcb"`: PCB sandwich. Bosses stop at the PCB underside, the plate gets spacer bosses
-  down to the PCB, MX plate-to-PCB spacing is automatic (5.0 mm MX / 2.2 mm Choc), the MCU sits
-  on sockets on the PCB and the plate gets a window instead of the cradle.
+- `build = "pcb"`: PCB sandwich, and the slimmest build at **11.5 mm**. Bosses stop at the PCB
+  underside, the plate gets spacer bosses down to the PCB, MX plate-to-PCB spacing is automatic
+  (5.0 mm MX / 2.2 mm Choc), the MCU sits on sockets on the PCB, the plate gets a window instead of
+  the cradle, and the cell either lies flat under the board or rides in a pod on the plate over the
+  controller. The boards are in [`pcb/`](pcb/) — see
+  [The slim build](#the-slim-build-a-real-pcb-115-mm).
 - `switch_type = "choc"` swaps pitch (18 × 17), cutout (13.8), plate thickness (1.3) and heights.
 - Wall cutouts: `usb_cutout = [w, h, z-offset-from-board-top]`; `extra_cutouts` for a power
   switch etc. `[x, y, outward_angle, w, h, z]`.
@@ -356,26 +377,102 @@ It picks up `SW*`/`K*`/`MX*` switch footprints (position, rotation), mounting ho
 1.9–3.6 mm drills, `U1` as the MCU, and chains `Edge.Cuts` into one polygon. Add an `include`
 and a `layout` option in `keyboard.scad` the way `cheapino`/`badtemper` are wired in.
 
-## Thin PCB variant
+## The slim build: a real PCB, 11.5 mm
 
-`build = "pcb"` turns the same design into a **PCB sandwich**: hot-swap sockets on a real board
-instead of hand-wiring, plate spacer bosses down to the PCB, MX plate-to-PCB spacing handled, the
-controller soldered to the board under the plate window, reset/power as PCB-mounted parts poking
-up through their own plate windows (positions in the placement CSV), and the
-battery standing through a cutout in the board, **sunk into a well in the floor**
-(`battery_well_floor = 1.2` — 1.2 mm of plastic under the cell instead of the full 2.5 mm floor;
-the well's walls locate the cell, replacing the fence). Heights to the plate top: **12.7 mm** with
-the 902030, 13.7 mm with the 103450, and 11.5 mm with a 6 mm cell — vs 17.5 mm hand-wired. (The
-well also works on the hand-wired build for −1.3 mm, at the cost of the two bay bumpons.)
-The printed parts are in [`variants/5col_extra2_bat902030_pcb/`](variants/5col_extra2_bat902030_pcb/).
+`build = "pcb"` turns the same design into a **PCB sandwich**, and the boards exist: [`pcb/`](pcb/)
+holds two complete, DRC-clean KiCad 9 projects with gerbers, generated from this model by
+[`tools/pcb_gen.py`](tools/pcb_gen.py).
 
-The PCB itself is a KiCad project to design; this repo bootstraps it:
-[`docs/pcb/pacino_edge_cuts.dxf`](docs/pcb/pacino_edge_cuts.dxf) is the exact board outline
-(cavity − 0.5 mm, battery cutout, M2 boss holes) to import onto `Edge.Cuts`, and
-[`docs/pcb/pacino_placement.csv`](docs/pcb/pacino_placement.csv) lists every switch, hole, the MCU
-and the battery keep-out in KiCad coordinates (`tools/kicad_placement.py` regenerates both). Make
-the board reversible and one design serves both halves. Once it exists, `tools/kicad_layout.py`
-reads the finished `.kicad_pcb` back so the case can follow the real board exactly.
+![the Pacino PCB](docs/pcb/pacino_pcb_iso.png)
+
+![the Pacino PCB, both faces](docs/pcb/pacino_pcb.png)
+
+*The same board twice: front, and back. Flip it over and the bay swaps sides — that is the right
+half. Each face's silkscreen names the half you build on it.*
+
+**11.5 mm to the plate top** — the floor for any MX build, and 6 mm thinner than hand-wired. The
+stack is 2.5 floor + 2.4 (hot-swap sockets) + 1.6 board + 5.0 (MX plate-to-PCB, fixed by the
+switch), and there is nothing left to remove.
+
+What sets it is where the cell goes, because **below the board every millimetre of battery is a
+millimetre of case**. Above it, the 3.5 mm the MX geometry hands you is free — the socketed
+controller already lives there, finishing flush with the plate top, and costs no height at all.
+There are two ways to spend that, and both are built:
+
+### Flat — a 303040 under the board (the default)
+
+![the slim build, flat](docs/pacino_slim.png)
+
+There is 3.4 mm of unused space under the board in the bay: 1.3 mm of floor well plus the 2.4 mm the
+hot-swap sockets need — and the bay has no switches, so nothing is using it. A cell that fits inside
+it needs no pod and no cutout in the board. A **303040** (3 × 30 × 40, ~320 mAh) lies in a well in the
+floor, the plate stays flat, and the controller sits flush in its window.
+Parts: [`variants/5col_extra2_bat303040_pcb_flat/`](variants/5col_extra2_bat303040_pcb_flat/),
+board: [`pcb/flat/`](pcb/flat/).
+
+3.4 mm is a cliff, not a slope. A thicker cell has to poke up through the board, and in the bay that
+cutout runs straight under the controller and leaves its pin rows with no board to solder to — the
+model warns if you ask for it.
+
+### Pod — the 902030 over the controller
+
+![the slim build, pod](docs/pacino_slim_pod.png)
+
+If you want the full 500 mAh, the 902030 rides in a **pod moulded into the plate, directly over the
+controller** (`battery_pod = true`): in through the MCU window from below, resting on the controller,
+leads down into the bay. Same 11.5 mm case, same outline — the pod stands 11.1 mm proud of the plate,
+under the keycaps, which reach 14.5.
+Parts: [`variants/5col_extra2_bat902030_pcb_pod/`](variants/5col_extra2_bat902030_pcb_pod/),
+board: [`pcb/pod/`](pcb/pod/).
+
+![the slim build, exploded](docs/pacino_slim_exploded.png)
+
+![the slim build in section, exploded and labelled](docs/pacino_slim_section.png)
+
+*Every part and where it sits, in the order you assemble it. `part = "section"` cuts the stack at
+`section_x` (here 111, through a thumb key and the bay at once); `explode` separates the layers —
+case, cell, board, controller, plate, switches, keycaps — each by its own step, so `explode = 0` is
+exactly the assembled model.*
+
+### The board
+
+20 keys, 39 nets, ~515 tracks, ~16 vias, two layers, 0.3 mm tracks / 0.2 mm clearance / 0.3 mm
+smallest drill — the cheapest process any fab offers. Hot-swap sockets, SOD-123 diodes (a
+through-hole 1N4148 fits the same land), the controller on machined low-profile sockets under the
+plate window, reset and slide switch poking up through theirs.
+
+The two builds are **two boards**, not one board with an option: moving the cell moves the bay, two
+of the mounting holes and the reset/power positions. They are otherwise identical — same matrix,
+same footprints, same firmware; only the bay end of the outline and the parts in it differ.
+
+Both are **reversible**: one design, flipped over for the right half. Three things pay for that, and
+each board's `README.md` has the detail —
+
+- **Switches** carry *both* MX pin diagonals and a socket land on each face; on the right half they
+  go in rotated 180°, which an MX switch does not care about. (Mirroring the pin pair instead — the
+  obvious way — puts two 3 mm holes 2.84 mm apart and they merge into a slot.)
+- **The matrix** lands on different GPIOs per half, because flipping swaps the controller's two pin
+  rows. The ten holes were chosen so both of each hole's pins are usable *and* `pro_micro 1/14/15/16`
+  stay free on both halves — the nice!view four. Hence a separate `pacino_pcb` ZMK shield.
+- **Power** gets two three-pad solder jumpers (bridge to **L** or **R**). Reset needs none: it sits
+  across a pin pair that is GND/RST one way up and RST/GND the other.
+
+```sh
+tools/pcb_gen.py                 # both boards, footprint libraries and gerbers
+tools/pcb_gen.py --variant=flat  # just one
+```
+
+Everything on them comes from `keyboard.scad` — outline, switch positions, mounting holes, controller
+and switch placement — so changing the model and re-running moves the boards with it. There is no
+schematic file: the generator declares every net and every connection, and names them the way the ZMK
+shield does. Each project ships a `*_gerbers.zip` ready to upload; order ten and you have five
+keyboards' worth of both halves.
+
+If you would rather draw your own board, the bootstrap files are still there:
+[`docs/pcb/pacino_edge_cuts.dxf`](docs/pcb/pacino_edge_cuts.dxf) (the outline for `Edge.Cuts`) and
+[`docs/pcb/pacino_placement.csv`](docs/pcb/pacino_placement.csv) (every position in KiCad
+coordinates), both from `tools/kicad_placement.py`. `tools/kicad_layout.py` reads a finished
+`.kicad_pcb` back so the case can follow the real board.
 
 ## Variant gallery
 
@@ -390,6 +487,12 @@ This repo doubles as the ZMK config — no separate zmk-config repo needed. `con
 change to either makes **GitHub Actions build the firmware** (Actions tab → latest run →
 artifacts → `.uf2` files for left, right and `settings_reset`). SuperMini nRF52840 clones flash
 as `nice_nano_v2`: double-tap reset, drag the `.uf2` on.
+
+The slim PCB build has its own shield, **`pacino_pcb`** (same layout, same matrix, same keymap):
+the reversible board puts the matrix on a different set of GPIOs on each half, so it cannot share
+`pacino_left` / `pacino_right`. Both shields are in the build matrix; take the `pacino_pcb_*`
+artifacts if you built the board. The pin lists are in
+[`pcb/README.md`](pcb/README.md) and `tools/pcb_gen.py` prints them.
 
 Electrical matrix (matches [`docs/wiring_guide.png`](docs/wiring_guide.png)) — 5 columns × 5 rows
 per half, diodes `col2row` (Amoeba-King: switch → diode → ROW pad):
@@ -412,3 +515,5 @@ need a matching edit to the transform and one more column pin.
 - OpenSCAD 2025.03+ (Manifold backend) — `/Applications/OpenSCAD.app`
 - FreeCAD 1.0+ for STEP — `/Applications/FreeCAD.app` (only for `build.sh step`)
 - Python 3 for the tools
+- KiCad 9 for the PCB — `tools/pcb_gen.py` runs itself under KiCad's bundled Python (`pcbnew`)
+  and uses `kicad-cli` for the gerbers
