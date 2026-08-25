@@ -439,7 +439,10 @@ exactly the assembled model.*
 20 keys, 39 nets, ~515 tracks, ~16 vias, two layers, 0.3 mm tracks / 0.2 mm clearance / 0.3 mm
 smallest drill — the cheapest process any fab offers. Hot-swap sockets, SOD-123 diodes (a
 through-hole 1N4148 fits the same land), the controller on machined low-profile sockets under the
-plate window, reset and slide switch poking up through theirs.
+plate window, reset and slide switch poking up through theirs. The silkscreen outlines every
+hot-swap socket on both faces, so each one goes where its outline is — and because the outlines on
+the two faces are the 180° rotation of each other, the way the right half differs is visible on the
+board rather than only in the instructions.
 
 The two builds are **two boards**, not one board with an option: moving the cell moves the bay, two
 of the mounting holes and the reset/power positions. They are otherwise identical — same matrix,

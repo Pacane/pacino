@@ -177,7 +177,9 @@ class Gen:
 
     def edge(self, a, b, layer=None, width=0.1, parent=None):
         s = pcbnew.PCB_SHAPE(parent or self.b); s.SetShape(pcbnew.SHAPE_T_SEGMENT)
-        s.SetStart(V(*a)); s.SetEnd(V(*b)); s.SetLayer(layer or pcbnew.Edge_Cuts)
+        s.SetStart(a if isinstance(a, pcbnew.VECTOR2I) else V(*a))
+        s.SetEnd(b if isinstance(b, pcbnew.VECTOR2I) else V(*b))
+        s.SetLayer(layer or pcbnew.Edge_Cuts)
         s.SetWidth(mm(width))
         (parent or self.b).Add(s)
 
@@ -203,7 +205,9 @@ class Gen:
             self._pad(f, p, world, rot)
         # graphics go on as footprint children in the unrotated frame; the orientation at the end
         # turns pads and shapes together
-        def L(x, y): return (at[0] + x, at[1] + y)
+        # sum in nanometres, not millimetres: FromMM(a + b) and FromMM(a) + FromMM(b) differ by a
+        # nanometre, which is enough for KiCad to call every instance different from the library's
+        def L(x, y): return pcbnew.VECTOR2I(mm(at[0]) + mm(x), mm(at[1]) + mm(y))
         if courtyard:
             x0, y0, x1, y1 = courtyard
             pts = [L(x0, y0), L(x1, y0), L(x1, y1), L(x0, y1)]
@@ -285,6 +289,55 @@ def mx_pads(col, sw):
         {"n": 2, "k": "F", "x":  5.842, "y":  5.08, "w": 2.55, "h": 2.5, "s": "rect", "net": sw},
     ]
 MX_CRT = (-8.8, -6.7, 7.8, 6.7)
+
+# The socket outline the silkscreen shows: the envelope of the Kailh socket's two contact ends and the
+# bridge between them, taken from the land geometry above rather than a datasheet drawing -- so it is
+# what you see looking at the socket from the face it solders to, at the size its lands imply.  Drawn
+# on both faces (the left half's sockets go on the back, the right half's on the front, rotated 180),
+# which also makes that rotation obvious without reading the silk.
+SOCKET_B = [(-8.71, -4.59), (0.49, -4.59), (0.49, -7.13), (7.47, -7.13),
+            (7.47, -3.03), (-1.76, -3.03), (-1.76, -0.49), (-8.71, -0.49)]
+SOCKET_F = [(x, -y) for x, y in SOCKET_B]
+
+def switch_mask(face):
+    """every mask opening the switch footprint makes on that face -- what its silk has to dodge"""
+    o = [("c", 0, 0, 2.0), ("c", -5.08, 0, 0.825), ("c", 5.08, 0, 0.825),
+         ("c", -3.81, -2.54, 1.7), ("c", -3.81, 2.54, 1.7),
+         ("c", 2.54, -5.08, 1.7), ("c", 2.54, 5.08, 1.7)]
+    sy = -1 if face == "B" else 1
+    return o + [("r", -7.085, sy * 2.54, 2.55, 2.5), ("r", 5.842, sy * 5.08, 2.55, 2.5)]
+
+def clear_of(p, obs, gap):
+    for o in obs:
+        if o[0] == "c":
+            if math.hypot(p[0] - o[1], p[1] - o[2]) < o[3] + gap: return False
+        else:
+            dx = max(abs(p[0] - o[1]) - o[3] / 2, 0); dy = max(abs(p[1] - o[2]) - o[4] / 2, 0)
+            if math.hypot(dx, dy) < gap: return False
+    return True
+
+def clip_silk(poly, obs, gap=0.3, step=0.08, minlen=0.6):
+    """walk the outline and keep only the stretches that clear every opening -- the outline comes out
+    broken where the pads interrupt it, which is what a hand-drawn socket outline looks like too"""
+    out, pts = [], poly + [poly[0]]
+    for a, b in zip(pts, pts[1:]):
+        n = max(2, int(math.hypot(b[0] - a[0], b[1] - a[1]) / step) + 1)
+        run = []
+        for i in range(n + 1):
+            t = i / n
+            p = (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t)
+            if clear_of(p, obs, gap):
+                run.append(p)
+            else:
+                if len(run) > 1 and math.hypot(run[-1][0] - run[0][0], run[-1][1] - run[0][1]) >= minlen:
+                    out.append((run[0], run[-1]))
+                run = []
+        if len(run) > 1 and math.hypot(run[-1][0] - run[0][0], run[-1][1] - run[0][1]) >= minlen:
+            out.append((run[0], run[-1]))
+    return out
+
+SOCKET_SILK = ([(a, b, "B") for a, b in clip_silk(SOCKET_B, switch_mask("B"))] +
+               [(a, b, "F") for a, b in clip_silk(SOCKET_F, switch_mask("F"))])
 MX_FAB = [((-7, -7), (7, -7)), ((7, -7), (7, 7)), ((7, 7), (-7, 7)), ((-7, 7), (-7, -7))]
 
 def diode_pads(row, sw):
@@ -654,7 +707,8 @@ def build():
     for i, k in enumerate(keys):
         row, col = rc[i]; at = K(k); rot = k[2]
         sw, cn, rn = "SW%d" % (i + 1), "COL%d" % col, "ROW%d" % row
-        g.fp("SW%d" % (i + 1), "MX_Hotswap_Rev", at, rot, mx_pads(cn, sw), MX_CRT, fab=MX_FAB)
+        g.fp("SW%d" % (i + 1), "MX_Hotswap_Rev", at, rot, mx_pads(cn, sw), MX_CRT,
+             silk=SOCKET_SILK, fab=MX_FAB)
         dx, dy, drot, _, _ = diode_at[i]
         g.fp("D%d" % (i + 1), "1N4148W", (dx, dy), drot, diode_pads(rn, sw), D_CRT,
              silk=[((-2.75, -0.5), (-2.75, 2.0), "F"), ((-2.75, -0.5), (-2.75, 2.0), "B")])
@@ -844,8 +898,10 @@ def export_library(g, libdir):
             if f.endswith(".kicad_mod"): os.remove(os.path.join(libdir, f))
     os.makedirs(libdir, exist_ok=True)
     io = pcbnew.PCB_IO_MGR.PluginFind(pcbnew.PCB_IO_MGR.KICAD_SEXP)
+    # take an unrotated instance as the master: duplicating a rotated one and turning it back to 0
+    # leaves its graphics a nanometre off, which every unrotated instance then "mismatches"
     done = set()
-    for fp in g.b.GetFootprints():
+    for fp in sorted(g.b.GetFootprints(), key=lambda f: abs(f.GetOrientationDegrees()) > 1e-9):
         name = fp.GetValue()
         if name in done: continue
         done.add(name)
@@ -979,8 +1035,9 @@ which is GND/RST one way up and RST/GND the other.
 1. Pick your half and work on **that face only** -- the one whose silkscreen names your half.
 2. Diodes: cathode (the bar) towards the marked end. The land takes a SOD-123 on either face, or a
    through-hole 1N4148 bent to 3.3 mm.
-3. Hot-swap sockets, one per key, on the same face. **Right half: rotated 180 degrees**, into the
-   land that is there for it.
+3. Hot-swap sockets, one per key, on the same face -- the silkscreen outlines each one, so the
+   socket goes where its outline is. **Right half: rotated 180 degrees**; the outlines on that face
+   are drawn that way round, so follow them rather than the other side's.
 4. Reset and slide switch: through-hole, bodies on the *other* face -- they poke up through their
    windows in the plate.
 5. Sockets for the controller on the same face as everything else; the nice!nano goes in

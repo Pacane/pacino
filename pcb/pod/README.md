@@ -65,8 +65,9 @@ which is GND/RST one way up and RST/GND the other.
 1. Pick your half and work on **that face only** -- the one whose silkscreen names your half.
 2. Diodes: cathode (the bar) towards the marked end. The land takes a SOD-123 on either face, or a
    through-hole 1N4148 bent to 3.3 mm.
-3. Hot-swap sockets, one per key, on the same face. **Right half: rotated 180 degrees**, into the
-   land that is there for it.
+3. Hot-swap sockets, one per key, on the same face -- the silkscreen outlines each one, so the
+   socket goes where its outline is. **Right half: rotated 180 degrees**; the outlines on that face
+   are drawn that way round, so follow them rather than the other side's.
 4. Reset and slide switch: through-hole, bodies on the *other* face -- they poke up through their
    windows in the plate.
 5. Sockets for the controller on the same face as everything else; the nice!nano goes in
