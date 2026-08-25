@@ -48,7 +48,7 @@ layouts/badtemper.scad   generated from ../badtemper2/BadTemper.kicad_pcb
 tools/kicad_layout.py    KiCad .kicad_pcb -> layouts/*.scad  (switches, holes, MCU, Edge.Cuts polygon)
 tools/pcb_gen.py         the slim build's PCBs: model -> pcb/*/ boards + footprint libs + gerbers
 pcb/flat/  pcb/pod/     those two KiCad projects (generated, DRC-clean; each has its own README,
-                         gerber zip and renders)
+                         gerber zip and renders).  part = "pcb_test" prints a stand-in to fit first
 tools/csg2step.py        OpenSCAD .csg -> STEP, runs inside FreeCAD
 tools/svg_polygon.py     helper: bakes the cavity outline to a polygon for the FreeCAD pass
 build.sh                 builds everything into out/
@@ -287,14 +287,16 @@ runs on the floor between the pillar rows.
 
 ![wiring guide](docs/wiring_guide.png)
 `key_pcbs = true` (default) also stops the ribs 0.3 mm above the boards' top face, since the boards
-are wider than the rib cells; set it to false for plain hand-wiring (no boards, no pillars).
+are wider than the rib cells; set it to false for plain hand-wiring (no boards, no pillars). All of
+this is a hand-wired idea — `build = "pcb"` ignores it, and takes its rib depth from the main board.
 
 ### Plate stiffness
 
 A flat 1.5 mm PETG plate flexes under typing, and infill/walls can't fix that (it is already
 practically solid). The plate therefore carries an **egg-crate of ribs** on its underside:
 a 1.5 mm wall around every switch, 3.2–3.5 mm tall (down to the switch-body bottom, or 0.3 mm above
-per-key PCBs), 0.3 mm outside the switch's clip zone, merging into a grid (`plate_ribs`, `rib_w`, `rib_h`). That is roughly 5× the bending stiffness of the flat plate
+per-key PCBs, or the main board on the slim build), 0.3 mm outside the switch's clip zone, merging
+into a grid (`plate_ribs`, `rib_w`, `rib_h`). That is roughly 5× the bending stiffness of the flat plate
 at no change in case height — the ribs sit beside the switch bodies, above the pins, so wiring and
 diodes (which live below the pins) are unaffected. The ribs are kept clear of the bosses and the
 lip. Print the plate in 100 % infill anyway; a PLA plate with a PETG case is also a fine
@@ -439,6 +441,24 @@ board: [`pcb/pod/`](pcb/pod/).
 `section_x` (here 111, through a thumb key and the bay at once); `explode` separates the layers —
 case, cell, board, controller, plate, switches, keycaps — each by its own step, so `explode = 0` is
 exactly the assembled model.*
+
+### Test-fitting it before you order a board
+
+`part = "pcb_test"` prints a stand-in for the PCB: the real outline and mounting notches at 1.6 mm
+thick, every hole a switch's pins, pegs and centre post pass through, the controller's two socket
+rows, and the reset and slide switch legs — plus bumps on the underside at the hot-swap socket's real
+1.85 mm, so the 2.4 mm under the board is a real test and not an assumption. Both slim variants ship
+one as `pcb_test.3mf`; it is reversible the same way the board is, so flip it over for the other half.
+
+```sh
+SCAD_ARGS='-D build="pcb"' ./build.sh          # the case and plate
+openscad -D 'part="pcb_test"' -D 'build="pcb"' -o pcb_test.3mf keyboard.scad
+```
+
+Print it flat, bumps up, then turn it over into the case. It checks the outline against the walls
+and bosses, that every switch's pins land in a hole, the plate-to-board spacing, where the controller
+and the two switches sit, the cell's room, and the 11.5 mm — everything except the copper. What it
+cannot tell you: a printed 1.6 mm sheet is floppier than FR-4, so don't judge flex by it.
 
 ### The board
 

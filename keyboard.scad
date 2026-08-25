@@ -18,7 +18,7 @@ include <layouts/cheapino.scad>
 include <layouts/badtemper.scad>
 
 /* [Output] */
-part = "assembly"; // [assembly, section, case, plate, bezel, insert_test, plate_2d, case_outline_2d, cavity_2d, pcb_2d, pcb_outline_2d, bezel_2d, info]
+part = "assembly"; // [assembly, section, case, plate, bezel, insert_test, pcb_test, plate_2d, case_outline_2d, cavity_2d, pcb_2d, pcb_outline_2d, bezel_2d, info]
 // part = "section": 2D cross-section of the assembly through the plane x = section_x (Y across, Z up)
 section_x = 123;
 side = "left"; // [left, right, both]
@@ -74,6 +74,13 @@ pcb_lift = 0;
 pcb_t = 1.6;
 // pcb build: MCU socket height above the PCB
 mcu_socket_h = 3.5;
+// pcb build: part = "pcb_test" prints a stand-in for the board at pcb_t thick -- the real outline and
+// every hole a switch, the controller or the two switches passes through -- so the whole stack can be
+// test-fitted before a board is ordered. The stand-ins for the hot-swap sockets are bumps on the
+// underside at the socket's real height, which is what makes the 2.4 mm under the board a real test.
+pcb_test_sockets = true;
+// holes come out undersize when printed; these are the drilled sizes plus a little
+pcb_test_slop = 0.2;
 // pcb build: carry the cell in a pod that is part of the plate, directly over the socketed controller
 // (whose bare back finishes flush with the plate top), instead of in a well in the case floor. Below the
 // board every millimetre of cell is a millimetre of case; the 3.5 mm above it is fixed by the MX
@@ -133,6 +140,7 @@ well_clearance = 0.75;
 // Sideways the board is located by the nubs at the pocket ends, NOT by the 1.2 mm wire channels along
 // its sides -- the channel span is ~20.4 mm by design.
 mcu_size = [18, 33];
+mcu_pins = 12;          // per side (nice!nano / Pro Micro: 2 x 12 on 2.54, rows 15.24 apart)
 // PCB thickness (SuperMini measured 1.53; its reset button stands 1.1 mm above the board, centred on the far end)
 mcu_pcb_t = 1.55;
 mcu_offset = [0, 0];
@@ -261,7 +269,7 @@ nv_bezel_hole_d = 2.3;
 plate_ribs = true;
 rib_w = 1.5;
 // rib height below the plate; 0 = automatic: down to the switch-body bottom, or 0.3 mm above the top of
-// single-key hot-swap PCBs when key_pcbs is on
+// single-key hot-swap PCBs when key_pcbs is on (a hand-wired idea: build = "pcb" ignores all of this)
 rib_h = 0;
 // per-key hot-swap PCBs (amoeba style, ~19 mm wide) hanging on the switches under the plate
 key_pcbs = true;
@@ -758,7 +766,13 @@ module ctrl_cut(p, body, legs, recess) {
 }
 
 // ribs: ring around each switch, kept clear of the bosses and the lip
-rib_height = rib_h > 0 ? rib_h : (is_choc ? 2.2 : 5) - plate_t - (key_pcbs ? 0.3 : 0);
+// the ribs hang from the plate's underside to just short of whatever is beneath them: the main board
+// on a PCB build, the per-key boards on a hand-wired one, or the switch body's bottom if neither.
+// (Deriving the PCB build's from key_pcbs -- a hand-wired idea -- happened to give the same 3.2 mm,
+// but turning key_pcbs off then stood the ribs straight on the board.)
+rib_height = rib_h > 0 ? rib_h
+           : build == "pcb" ? plate_to_pcb - plate_t - 0.3
+           : (is_choc ? 2.2 : 5) - plate_t - (key_pcbs ? 0.3 : 0);
 module plate_ribs_3d() translate([0, 0, z_plate_bot - rib_height]) linear_extrude(rib_height + eps) difference() {
   intersection() {
     offset(r = -lip_clearance - lip_w) cavity_2d();
@@ -817,6 +831,35 @@ module plate_hull() difference() {
   if (cradle) {
     cradle_cuts();
     if (!mcu_flipped) wall_cutouts();   // unflipped only: the USB plug crosses the plate level
+  }
+}
+
+// A printable stand-in for the PCB.  Print it flat, bumps up, then turn it over into the case: it
+// checks the outline against the walls and bosses, that every switch's pins land in a hole, the
+// plate-to-board spacing, where the controller and the two switches sit, and the cell's room --
+// everything except the copper.  It is not as stiff as a real 1.6 mm board, so do not judge flex by it.
+socket_bump = [[-8.71, 4.59], [0.49, 4.59], [0.49, 7.13], [7.47, 7.13],
+               [7.47, 3.03], [-1.76, 3.03], [-1.76, 0.49], [-8.71, 0.49]];
+module pcb_test() difference() {
+  union() {
+    linear_extrude(pcb_t) pcb_board_2d();
+    if (pcb_test_sockets)
+      for (k = keys) at(k) translate([0, 0, -1.85]) linear_extrude(1.85 + eps) polygon(socket_bump);
+  }
+  d = pcb_test_slop;
+  for (k = keys) at(k) {
+    translate([0, 0, -3]) cylinder(d = 4 + d, h = pcb_t + 6);                       // centre post
+    for (sx = [-1, 1]) translate([sx * 5.08, 0, -3]) cylinder(d = 1.65 + d, h = pcb_t + 6);   // pegs
+    for (p = [[-3.81, 2.54], [-3.81, -2.54], [2.54, 5.08], [2.54, -5.08]])          // switch pins
+      translate([p[0], p[1], -3]) cylinder(d = 3 + d, h = pcb_t + 6);
+  }
+  if (build == "pcb") {
+    at_mcu() for (sx = [-1, 1], i = [0 : mcu_pins - 1])                             // controller sockets
+      translate([sx * 7.62, (mcu_pins - 1) * 1.27 - i * 2.54, -1]) cylinder(d = 1 + d, h = pcb_t + 2);
+    if (has_ctrl && reset_button) for (l = reset_legs)
+      translate([reset_c[0] + l[0], reset_c[1] + l[1], -1]) cylinder(d = 0.95 + d, h = pcb_t + 2);
+    if (has_ctrl && power_switch) for (l = power_legs)
+      translate([power_c[0] + l[0], power_c[1] + l[1], -1]) cylinder(d = 0.95 + d, h = pcb_t + 2);
   }
 }
 
@@ -950,6 +993,7 @@ mirrored_for_side() {
   else if (part == "plate_2d")        plate_2d();
   else if (part == "case_outline_2d") outline_2d();
   else if (part == "cavity_2d")       cavity_2d();
+  else if (part == "pcb_test")        pcb_test();
   else if (part == "pcb_2d")          pcb_2d();
   else if (part == "pcb_outline_2d")  pcb_board_2d();   // Edge.Cuts for the Pacino PCB (build = "pcb")
 }

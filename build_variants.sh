@@ -63,6 +63,9 @@ for slim in flat pod; do
     rm -rf "$ROOT/$name"; mkdir -p "$ROOT/$name"
     OUT="$ROOT/$name" SCAD_ARGS="$args" STL=0 PREVIEWS=min ./build.sh step mesh png 2>&1 | grep -E "STEP|ERROR|fail|Exception" | sed 's/^/  /' || true
     rm -f "$ROOT/$name"/*.csg
+    # a printable stand-in for the board, to test-fit the stack before ordering one
+    "$OPENSCAD" --backend=Manifold -q -D 'part="pcb_test"' $args -o "$ROOT/$name/pcb_test.3mf" keyboard.scad
+    echo "  pcb_test.3mf"
   fi
   size=$(measure "$args")
   echo "| [\`$name\`]($name/) | 5 | 20 | $bat | no | $size | ![]($name/preview_top.png) |" >> "$INDEX"
