@@ -74,6 +74,16 @@ pcb_lift = 0;
 pcb_t = 1.6;
 // pcb build: MCU socket height above the PCB
 mcu_socket_h = 3.5;
+// pcb build: carry the cell in a pod that is part of the plate, directly over the socketed controller
+// (whose bare back finishes flush with the plate top), instead of in a well in the case floor. Below the
+// board every millimetre of cell is a millimetre of case; the 3.5 mm above it is fixed by the MX
+// plate-to-PCB geometry and otherwise wasted, so this costs no case height at all -- 11.5 mm to the plate
+// top, the MX minimum, with the 902030 still in the build. The pod stands battery + pod_wall proud of the
+// plate, under the keycaps (14.5). The cell goes in through the MCU window from below and rests on the
+// controller; its leads drop into the bay past the window's far end. The board is then solid (no cutout).
+battery_pod = true;
+pod_wall = 1.2;
+pod_clearance = 0.4;
 
 /* [Case] */
 wall = 2.4;
@@ -111,9 +121,13 @@ battery_offset = [0, 0];
 // locating fence around the battery (height, width); the lead end is left open
 battery_fence = [3, 1.2];
 // sink the battery into the floor, leaving this much plastic under it (0 = off, battery sits on the full
-// floor inside the fence). The well's walls replace the fence, and the case gets ~1.3 mm thinner. The two
-// bay bumpons are skipped when on (no room beside the well). Required by mcu_flipped (component clearance).
+// floor inside the fence). The well's walls replace the fence, and the case gets ~1.3 mm thinner.  With a
+// well the cell sits against the bay's LEFT wall (which then doubles as the well's side) instead of
+// bay_margin from it, so the bay's right-hand corners stay clear for the two bumpons there: a bumpon
+// recess over the well would leave 0.2 mm of floor.  Required by mcu_flipped (component clearance).
 battery_well_floor = 1.2;
+// the well is the cell's outline plus this all round
+well_clearance = 0.75;
 // controller board [width, length]: SuperMini / "Pro Micro nRF52840" nice!nano clone, measured 18 x 33
 // (vendors quote 17.8 wide -- the 0.3 mm nub clearance covers both).  nice!nano = [18, 33.5].
 // Sideways the board is located by the nubs at the pocket ends, NOT by the 1.2 mm wire channels along
@@ -166,8 +180,13 @@ bumpon_d = 10;
 bumpon_clearance = 0.3;
 bumpon_depth = 1;
 // [x, y] under the key block / thumb cluster; two on the left edge follow the outer column and two more are
-// placed automatically on the bay (top-right, lower-right)
+// placed automatically on the bay: 8 mm in from its top-right corner, and 12 mm up from the bottom of the
+// control strip on the right.  With a battery well they move outward by only what the well forces (the
+// bay is sized so a full-size foot always fits there); the model warns if a foot has nowhere to go.
 bumpon_positions = [[38.1, 58], [15, 20], [71.5, -15.5], [111.7, -31.7]];
+// floor left between the bay's top-right recess and the outside of the wall. 1.0 is the minimum (a 1 x 1 mm
+// lip at the case's bottom edge); with a wide cell every extra millimetre here is a millimetre of case width
+bumpon_skin = 1.0;
 // round recess in the underside for a MagSafe magnet ring (56 mm sticker ring); 0 = none
 magsafe_d = 56;
 magsafe_depth = 1;
@@ -314,6 +333,7 @@ battery = battery_type == "103450" ? [34, 50, 10.5] : battery_type == "604060" ?
         : battery_type == "902030" ? [20, 30, 9.5] : battery_custom;
 has_bay = layout == "grid" && use_bay;
 cradle = build == "plate" && has_bay;
+has_pod = build == "pcb" && has_bay && battery_pod;   // cell above the plate, not in the floor
 has_nv = nice_view && cradle;
 nv_over = has_nv && nv_stacked && mcu_flipped;   // the display sits on top of the board, not beside it
 has_ctrl = has_bay && (reset_button || power_switch);   // the control strip exists in both builds;
@@ -327,16 +347,25 @@ elec_w = nano_w + (has_nv && !(nv_stacked && mcu_flipped) ? nv_gap + nv_W + 2 * 
 nano_l = mcu_size[1] + 2 * mcu_clearance + rail_w + 1;                    // pocket + far rail + gap to the wall
 nv_l   = 1 + nv_boss_d + 1 + nv_L + 1 + nv_boss_d;                         // wall gap, boss, gap, pocket, gap, boss
 // width: battery + margins, or the electronics row + left margin + room for a wall boss on the right
+well_on  = has_bay && !has_pod && battery_well_floor > 0;   // the cell is in a well in the floor
+bumpon_r = bumpon_d / 2 + bumpon_clearance;                 // recess radius
+// the cell needs room *in the bay* only when it sits in the case floor (in the plate pod it is not in
+// the bay at all).  In a well it sits against the bay's left wall, and the bay must then be wide
+// enough for the top-right foot to fit beside it: cell + well + foot + 1 mm of skin outside the recess
+batt_bay_margin = has_pod ? 0 : bay_margin;
+batt_mx    = well_on ? well_clearance : bay_margin;           // cell -> bay left wall
+foot_bay_w = well_on ? batt_mx + battery[0] + well_clearance + 0.3 + 2 * bumpon_r + bumpon_skin - wall : 0;
+
 bay_w  = bay_size_override[0] > 0 ? bay_size_override[0]
-       : max(battery[0] + 2 * bay_margin, elec_w + bay_margin + boss_d + 1);   // room for the corner boss beside the cradle
+       : max(battery[0] + 2 * batt_bay_margin, foot_bay_w, elec_w + bay_margin + boss_d + 1);   // room for the corner boss beside the cradle
 bay_h  = bay_size_override[1] > 0 ? bay_size_override[1]
-       : max(battery[1] + 2 * bay_margin, nano_l + bay_margin, has_nv ? nv_l + bay_margin : 0);
+       : max(battery[1] + 2 * batt_bay_margin, nano_l + bay_margin, has_nv ? nv_l + bay_margin : 0);
 bay    = [bay_left, bay_top_y - bay_h, bay_w, bay_h];
 bay_cx = bay[0] + bay[2] / 2;
 bay_cy = bay[1] + bay[3] / 2;
 bay_top = bay[1] + bay[3];
 bay_right = bay[0] + bay[2];
-batt_c = [bay[0] + bay_margin + battery[0] / 2 + battery_offset[0], bay[1] + bay_margin + battery[1] / 2 + battery_offset[1]];
+batt_c = [bay[0] + batt_mx + battery[0] / 2 + battery_offset[0], bay[1] + bay_margin + battery[1] / 2 + battery_offset[1]];
 
 // control bay hung below the bay, full width (a narrower one leaves a pocket that the outline smoothing turns into a hole).
 // Pockets are placed as high as the battery allows: their top edge 0.5 mm below the battery's bottom edge.
@@ -353,6 +382,17 @@ mcu_cx0 = bay[0] + bay_margin + nano_w / 2;   // left side of the bay; the right
 mcu = has_bay
   ? [mcu_cx0 + mcu_offset[0], bay_top - 1 - mcu_size[1] / 2 + mcu_offset[1], 0, mcu_size[0], mcu_size[1]]
   : (layout == "badtemper" ? badtemper_mcu : cheapino_mcu);
+
+// battery pod (build = "pcb"): a box moulded into the plate over the controller. The interior clears
+// both the cell and the MCU window it drops through, so its walls always land on plate, never over the
+// window. pod_ih is measured from the plate top -- the controller's bare back is flush with it.
+batt_cc = has_pod ? [mcu[0], mcu[1]] : batt_c;   // the cell is centred over the controller in the pod
+pod_iw  = max(battery[0] + 2 * pod_clearance, mcu[3] + 2.4);
+pod_il  = max(battery[1] + 2 * pod_clearance, mcu[4] + 2.4);
+// interior height is measured from the plate top, but the cell actually lands on whatever is
+// highest: with the stock 3.5 mm sockets the controller's back finishes 0.05 mm proud of the plate,
+// and taller sockets lift it (and the cell) further, so add whatever it stands proud by
+pod_ih  = battery[2] + pod_clearance + max(0, mcu_socket_h + mcu_pcb_t - plate_to_pcb);
 usb = has_bay ? [mcu[0], bay_top - 1 + mcu_offset[1]] : (layout == "badtemper" ? badtemper_usb : cheapino_usb);
 
 // nice!view pocket: centre, bezel screw boss y positions, bezel size
@@ -364,9 +404,31 @@ nv_boss_off = nv_over ? [[nv_boss_r, 0], [-nv_boss_r, 0]] : [[0, nv_boss_r], [0,
 nv_bezel_size = nv_over ? [nv_W + 2 * (1 + nv_boss_d + 1), nv_L + 2 * nv_bezel_margin]
                         : [nv_W + 2 * nv_bezel_margin, nv_L + 2 * (1 + nv_boss_d + 1)];
 
-// bumpons: the fixed list plus two on the bay (inset 8 mm from its top-right and bottom-right corners)
-bumpons = concat([[x_left - 4, -4], [x_left - 4, 42]], bumpon_positions, has_bay && battery_well_floor == 0
-  ? [[bay_right - 8, bay_top - 8], [bay_right - 10, (has_ctrl ? ctrl_rect[1] : bay[1]) + 12]] : []);
+// bumpons: the fixed list plus two on the bay -- 8 mm in from its top-right corner, and 12 mm up from the
+// bottom of the control strip on the right.  A recess (1 mm) over the battery well (1.3 mm into the 2.5 mm
+// floor) would leave 0.2 mm of plastic, so with a well each foot is pushed outward by exactly what it
+// takes to clear the well: the top one to the right (the bay was sized so it never needs more than
+// leaves 1 mm of skin outside the recess), the bottom one down into the control strip.
+bay_y0      = has_ctrl ? ctrl_rect[1] : bay[1];
+well_right  = batt_c[0] + battery[0] / 2 + well_clearance;
+well_top    = batt_c[1] + battery[1] / 2 + well_clearance;
+well_bottom = batt_c[1] - battery[1] / 2 - well_clearance;
+foot_keep   = bumpon_r + 0.3;                                  // recess edge -> well edge
+top_dy = max(0, (bay_top - 8) - well_top);
+top_x  = !well_on ? bay_right - 8
+       : max(bay_right - 8, well_right + sqrt(max(0, foot_keep * foot_keep - top_dy * top_dy)));
+bot_x  = bay_right - 10;
+bot_dx = max(0, bot_x - well_right);
+bot_y  = !well_on ? bay_y0 + 12
+       : min(bay_y0 + 12, well_bottom - sqrt(max(0, foot_keep * foot_keep - bot_dx * bot_dx)));
+bay_foot_top = [top_x, bay_top - 8];
+bay_foot_bot = bot_y - bumpon_r >= bay_y0 - wall + 1.0 ? [[bot_x, bot_y]] : [];   // still on the floor?
+if (has_bay && len(bay_foot_bot) == 0)
+  echo("WARNING: no room for the bay's lower bumpon between the battery well and the wall -- add a control strip or a taller bay");
+if (has_bay && top_x + bumpon_r > bay_right + wall - bumpon_skin + 0.01)
+  echo("WARNING: the bay's top-right bumpon would break through the wall -- widen the bay (bay_size_override)");
+bumpons = concat([[x_left - 4, -4], [x_left - 4, 42]], bumpon_positions,
+                 has_bay ? concat([bay_foot_top], bay_foot_bot) : []);
 
 // bosses on the bay walls: top-right corner and (control-bay) bottom-right corner
 bay_holes = has_bay ? [[bay_right - 3, bay_top - 0.5], [bay_right - 2.5, (has_ctrl ? ctrl_rect[1] : bay[1]) + 0.5]] : [];
@@ -377,14 +439,23 @@ batt_z0     = battery_well_floor > 0 ? battery_well_floor : floor_t;
 // board height above the battery: flat back needs 1.5 (ledge + air); flipped, the components hang
 // down and need ~2.8 (nRF module + margin)
 mcu_ab_e    = mcu_flipped ? max(mcu_above_battery, 2.8) : mcu_above_battery;
-pcb_lift_e  = pcb_lift > 0 ? pcb_lift : max(2.4, batt_z0 + battery[2] + 0.5 - floor_t - (plate_to_pcb - plate_t) - pcb_t);
+pcb_lift_min = 2.4;   // what a Kailh hot-swap socket needs under the board
+pcb_lift_e  = pcb_lift > 0 ? pcb_lift : has_pod ? pcb_lift_min   // pod: only the sockets are under the board
+            : max(pcb_lift_min, batt_z0 + battery[2] + 0.5 - floor_t - (plate_to_pcb - plate_t) - pcb_t);
 z_pcb_bot   = floor_t + pcb_lift_e;
 z_pcb_top   = z_pcb_bot + pcb_t;
 cavity_d = cavity_depth > 0 ? cavity_depth : max(10, batt_z0 + battery[2] + mcu_ab_e + mcu_pcb_t + 0.95 - floor_t);
 z_plate_bot = build == "pcb" ? z_pcb_top + plate_to_pcb - plate_t : floor_t + cavity_d;
 z_plate_top = z_plate_bot + plate_t;
 z_wall_top  = z_plate_bot;
-z_batt_top  = batt_z0 + battery[2];
+z_batt_bot  = has_pod ? z_plate_top : batt_z0;
+// does the cell stand higher than the board's underside?  If so the board needs a cutout for it; if
+// not (a thin cell in the floor well, or the plate pod) the board stays solid.
+batt_thru   = has_bay && !has_pod && batt_z0 + battery[2] > floor_t + pcb_lift_e;
+// thickest cell that fits *under* the board -- measured at the minimum lift, since a cell that fits
+// there does not push the board up in the first place
+batt_max_t  = floor_t + pcb_lift_min - batt_z0 - 0.3;
+z_batt_top  = z_batt_bot + battery[2];
 z_mcu_bot   = build == "pcb" ? z_pcb_top + mcu_socket_h : z_batt_top + mcu_ab_e;
 z_mcu_top   = z_mcu_bot + mcu_pcb_t;
 z_ledge_bot = z_mcu_bot - ledge_t;
@@ -394,6 +465,28 @@ z_nv_bot    = z_nv_top - nv_pcb[2];
 // (they then double as the board's hold-down, replacing the cradle roof pad the display cuts through)
 nv_ledge_te = nv_over ? min(nv_ledge_t, z_nv_bot - z_mcu_top - 0.4) : nv_ledge_t;
 lip_height  = build == "pcb" ? min(lip_h, z_plate_bot - z_pcb_top - 0.3) : lip_h;
+
+// the controller hangs its USB connector 3.2 mm below its own board, so the sockets cannot be
+// shorter than that plus clearance -- this is what fixes mcu_socket_h at 3.5, not a guess
+// The one geometry that fails silently: a cell too thick to fit under the board has to poke through
+// it, and in the bay that cutout runs straight under the controller -- whose pin rows are then left
+// with no board to solder to.  (This is exactly what the first pass at this design did.)
+if (build == "pcb" && batt_thru
+    && abs(batt_cc[0] - mcu[0]) < (battery[0] + 2 + mcu[3]) / 2
+    && abs(batt_cc[1] - mcu[1]) < (battery[1] + 2 + mcu[4]) / 2)
+  echo(str("WARNING: the cell pokes through the board and its cutout runs under the controller -- ",
+           "the pin rows would have no board under them. Use battery_pod = true, or a cell at most ",
+           batt_max_t, " mm thick, which fits under the board and leaves it solid."));
+
+if (build == "pcb" && mcu_flipped && mcu_socket_h < 3.2 + 0.3)
+  echo(str("WARNING: mcu_socket_h = ", mcu_socket_h, " is shorter than the USB connector needs; ",
+           "the connector would sit ", 3.2 + 0.3 - mcu_socket_h, " mm inside the PCB -- use 3.5 mm sockets"));
+
+if (has_pod && (mcu[1] + pod_il / 2 + pod_wall > bay_top + wall
+             || mcu[0] - pod_iw / 2 - pod_wall < bay[0] - wall
+             || mcu[0] + pod_iw / 2 + pod_wall > bay_right + wall))
+  echo(str("WARNING: the battery pod (", pod_iw + 2 * pod_wall, " x ", pod_il + 2 * pod_wall,
+           ") overhangs the plate around the bay -- use a smaller cell or widen the bay"));
 
 if (cradle && z_ledge_bot < z_batt_top)
   echo(str("WARNING: MCU ledge (z=", z_ledge_bot, ") is below the battery top (z=", z_batt_top, ") — raise mcu_above_battery or cavity_depth"));
@@ -438,10 +531,22 @@ module bay_2d() if (has_bay) {
   translate([bay[0], bay[1]]) square([bay[2], bay[3]]);
   if (has_ctrl) translate([ctrl_rect[0], ctrl_rect[1]]) square([ctrl_rect[2], ctrl_rect[3]]);
 }
-module battery_2d(o = 0) translate(batt_c) rect(battery[0] + 2 * o, battery[1] + 2 * o);
+module battery_2d(o = 0) translate(batt_cc) rect(battery[0] + 2 * o, battery[1] + 2 * o);
 
 module pcb_2d() difference() {
   polygon(pcb_outline);
+  for (h = holes) translate(h) circle(d = 2.2);
+}
+
+// the board for build = "pcb": the cavity less pcb_gap, the M2 clearances (the bosses' screws pass
+// through them; seven of the eight fall on the edge and come out as notches), and -- only when the
+// cell is in the floor rather than the plate pod -- the cutout it pokes through.  This is exactly
+// what tools/pcb_gen.py turns into Edge.Cuts.
+module pcb_board_2d() difference() {
+  offset(r = -pcb_gap) cavity_2d();
+  // the board only needs a cutout if the cell actually pokes up through it: true for a thick cell in
+  // the floor, false for the plate pod and false for a thin one that fits under the board
+  if (batt_thru) battery_2d(1);
   for (h = holes) translate(h) circle(d = 2.2);
 }
 
@@ -466,9 +571,11 @@ module plate_windows_2d() intersection() {
   offset(r = -lip_clearance - lip_w) cavity_2d();        // never cut the rim that sits on the wall
   union() {
     for (w = plate_windows) translate([w[0], w[1]]) rotate(w[4]) rect(w[2], w[3]);
-    if (build == "pcb") at_mcu() rect(mcu[3] + 2, mcu[4] + 2);   // window over a PCB-mounted MCU
-    if (build == "pcb" && has_ctrl && reset_button) translate(reset_c) rect(reset_body[0] + 1, reset_body[1] + 1);   // PCB-mounted
-    if (build == "pcb" && has_ctrl && power_switch) translate(power_c) rect(power_body[0] + 1, power_body[1] + 1);   // switches poke through
+    if (build == "pcb") at_mcu() rect(has_pod ? pod_iw : mcu[3] + 2, mcu[4] + 2);   // window over a PCB-mounted MCU (the cell drops through it into the pod)
+    // PCB-mounted switches poke up through these; 0.3 mm clearance each side, not 0.5, because the
+    // two windows are only 1.65 mm apart and the rib between them is plate
+    if (build == "pcb" && has_ctrl && reset_button) translate(reset_c) rect(reset_body[0] + 0.6, reset_body[1] + 0.6);
+    if (build == "pcb" && has_ctrl && power_switch) translate(power_c) rect(power_body[0] + 0.6, power_body[1] + 0.6);
   }
 }
 
@@ -491,14 +598,14 @@ module wall_cut(x, y, ang, w, h, z0) {
 module wall_cutouts() {
   // flipped: an open-top notch (the solid plate bridges it) — a closed window would leave a
   // sub-mm sliver under the wall top, which prints badly
-  usb_z0 = cradle && mcu_flipped ? z_mcu_bot - 3.2 - 1.9 : z_mcu_top + usb_cutout[2];
+  usb_z0 = mcu_flipped ? z_mcu_bot - 3.2 - 1.9 : z_mcu_top + usb_cutout[2];
   if (usb_cutout[0] > 0)
     wall_cut(usb[0], usb[1], mcu[2] + 90, usb_cutout[0],
-             cradle && mcu_flipped ? z_wall_top - usb_z0 + 1 : usb_cutout[1], usb_z0);
+             mcu_flipped ? z_wall_top - usb_z0 + 1 : usb_cutout[1], usb_z0);
   if (len(extra_cutouts) > 0) for (c = extra_cutouts) wall_cut(c[0], c[1], c[2], c[3], c[4], c[5]);
 }
 
-module battery_fence() if (has_bay && battery_fence[0] > 0 && battery_well_floor == 0)
+module battery_fence() if (has_bay && !has_pod && battery_fence[0] > 0 && battery_well_floor == 0)
   translate([0, 0, floor_t - eps]) linear_extrude(battery_fence[0] + eps) difference() {
     battery_2d(battery_clearance + battery_fence[1]);
     battery_2d(battery_clearance);
@@ -540,8 +647,8 @@ module case_bottom() difference() {
   wall_cutouts();
   if (bumpon_d > 0) for (b = bumpons) translate([b[0], b[1], -1]) cylinder(d = bumpon_d + 2 * bumpon_clearance, h = bumpon_depth + 1);
   if (magsafe_d > 0) translate([magsafe_pos[0], magsafe_pos[1], -1]) cylinder(d = magsafe_d + 2 * magsafe_clearance, h = magsafe_depth + 1, $fn = 128);
-  if (has_bay && battery_well_floor > 0)   // battery well sunk into the floor (its walls locate the cell)
-    translate([0, 0, battery_well_floor]) linear_extrude(floor_t - battery_well_floor + eps) battery_2d(0.75);
+  if (has_bay && !has_pod && battery_well_floor > 0)   // battery well sunk into the floor (its walls locate the cell)
+    translate([0, 0, battery_well_floor]) linear_extrude(floor_t - battery_well_floor + eps) battery_2d(well_clearance);
 }
 
 // ---- nice!view: hanging ring with ledges + bezel screw bosses, the pocket cuts, and the separate bezel part
@@ -671,6 +778,14 @@ module cradle_ribs() at_mcu()
     translate([s * cr_W / 2, cr_yfar + yy, z_mcu_bot - 0.5])
       cylinder(r = crush_rib, h = z_plate_bot - (z_mcu_bot - 0.5) + eps, $fn = 24);
 
+// plain rectangle on purpose: the STEP pass (OCC) cannot do the offset-in-offset rounding trick,
+// and hull() is worse -- FreeCAD shells out to OpenSCAD for it and fails
+module pod_2d(o = 0) at_mcu() rect(pod_iw + 2 * o, pod_il + 2 * o);
+
+module pod_solid() translate([0, 0, z_plate_top - eps])
+  linear_extrude(pod_ih + pod_wall + eps) pod_2d(pod_wall);
+module pod_cut() translate([0, 0, z_plate_top]) linear_extrude(pod_ih) pod_2d(0);
+
 module plate() {
   plate_hull();
   if (cradle && mcu_flipped && crush_rib > 0) cradle_ribs();   // after the cuts: they live inside the board tunnel
@@ -692,7 +807,9 @@ module plate_hull() difference() {
     if (has_nv) nv_solid();
     if (build == "plate" && has_ctrl && reset_button) ctrl_solid(reset_c, reset_body, reset_recess);
     if (build == "plate" && has_ctrl && power_switch) ctrl_solid(power_c, power_body, power_recess);
+    if (has_pod) pod_solid();
   }
+  if (has_pod) pod_cut();
   if (has_nv) nv_cuts();
   if (build == "plate" && has_ctrl && reset_button) ctrl_cut(reset_c, reset_body, reset_legs, reset_recess);
   if (build == "plate" && has_ctrl && power_switch) ctrl_cut(power_c, power_body, power_legs, power_recess);
@@ -723,8 +840,8 @@ module switch_3d(k) at(k) {
 }
 
 module mcu_3d() {
-  color("darkolivegreen", 0.9) translate([0, 0, z_mcu_bot]) linear_extrude(mcu_pcb_t) mcu_2d();
-  color("silver") at_mcu() translate([-4.5, mcu[4] / 2 - 7.35 + 1.3, cradle && mcu_flipped ? z_mcu_bot - 3.2 : z_mcu_top])
+  color("gray12") translate([0, 0, z_mcu_bot]) linear_extrude(mcu_pcb_t) mcu_2d();
+  color("silver") at_mcu() translate([-4.5, mcu[4] / 2 - 7.35 + 1.3, mcu_flipped ? z_mcu_bot - 3.2 : z_mcu_top])
     cube([9, 7.35, 3.2]);   // USB-C (below the board when flipped)
 }
 
@@ -733,34 +850,66 @@ module nv_3d() at_nv() {
   color("black") translate([-nv_glass[0] / 2, nv_glass_shift - nv_glass[1] / 2, z_nv_top]) cube([nv_glass[0], nv_glass[1], nv_glass[2]]);
 }
 
-module ctrl_3d(p, body, recess, actuator) {
-  zf = z_plate_top - recess - body[2];
+module ctrl_3d(p, body, recess, actuator, on_board = false) {
+  zf = on_board ? z_pcb_top : z_plate_top - recess - body[2];
   color("dimgray") translate([p[0] - body[0] / 2, p[1] - body[1] / 2, zf]) cube(body);
   color("gainsboro") translate([p[0] - actuator[0] / 2, p[1] - actuator[1] / 2, zf + body[2]]) cube(actuator);
 }
 
-module electronics_3d() {
-  if (has_bay) color("dimgray", 0.8) translate([0, 0, batt_z0]) linear_extrude(battery[2]) battery_2d();
-  if (!cradle) mcu_3d();
-  if (build == "pcb" && cavity_from == "pcb")
-    color("darkolivegreen", 0.7) translate([0, 0, z_pcb_bot]) linear_extrude(pcb_t) pcb_2d();
-}
+// Kailh MX hot-swap socket, roughly: it hangs under the board on the pin side of the switch and is
+// what sets pcb_lift.  Drawn from the pad extents the PCB uses (model frame, y up).
+module socket_3d(k) at(k) translate([-8.0, 1.4, z_pcb_bot - 1.85]) cube([14.8, 4.9, 1.85]);
+
+// SOD-123 diode, drawn at the nominal slot in the band below each key.  tools/pcb_gen.py moves the
+// handful that do not fit there (near a mounting boss, or the board edge); the board file is the
+// authority on where each one actually is.
+module diode_3d(k) at(k) translate([-1.35, -9.6, z_pcb_bot - 1.1]) cube([2.7, 1.6, 1.1]);
+
+// Exploded view: every layer lifts by its own multiple of `explode`, so explode = 0 is exactly the
+// assembled model and anything above it separates the stack in the order you put it together.
+// the order is the order you build it in, so the gaps read as steps
+ex_board = 1;   // the PCB, with its sockets, diodes and the two switches soldered on
+ex_mcu   = 2;   // the controller, into its sockets
+ex_batt  = 3;   // the cell into the pod above; in the floor well it comes out below the board, at 0.5
+ex_plate = 4;   // the plate, carrying the pod, the windows and the ribs
+ex_sw    = 5;   // switches, clipped into the plate
+ex_cap   = 6;   // keycaps onto the switches
 
 module assembly() {
   color("slategray") case_bottom();
-  if (show_electronics) electronics_3d();
-  translate([0, 0, explode]) {
+
+  // the board and everything soldered to it
+  if (build == "pcb") translate([0, 0, explode * ex_board]) {
+    color("darkolivegreen", 0.7) translate([0, 0, z_pcb_bot]) linear_extrude(pcb_t) {
+      if (cavity_from == "pcb") pcb_2d(); else pcb_board_2d();
+    }
+    if (show_electronics) {
+      color("gray20") for (k = keys) socket_3d(k);
+      color("gray35") for (k = keys) diode_3d(k);
+      if (has_ctrl && reset_button) ctrl_3d(reset_c, reset_body, reset_recess, [3.5, 3.5, 3.3], true);
+      if (has_ctrl && power_switch) ctrl_3d(power_c, power_body, power_recess, [1.5, 2, 3], true);
+    }
+  }
+  // the cell, where it lives: a well in the floor, or the pod in the plate
+  if (show_electronics && has_bay)
+    translate([0, 0, explode * (has_pod ? ex_batt : 0.5)])
+      color("firebrick", 0.85) translate([0, 0, z_batt_bot]) linear_extrude(battery[2]) battery_2d();
+  // the controller: on sockets on the board, or held in the plate's cradle
+  if (show_electronics && !cradle) translate([0, 0, explode * ex_mcu]) mcu_3d();
+
+
+  translate([0, 0, explode * ex_plate]) {
     color("lightsteelblue") plate();
-    if (show_electronics && cradle) mcu_3d();   // the nice!nano lives in the plate's cradle
+    if (show_electronics && cradle) translate([0, 0, -explode]) mcu_3d();   // in the plate's cradle
     if (show_electronics && build == "plate" && has_ctrl && reset_button) ctrl_3d(reset_c, reset_body, reset_recess, [3.5, 3.5, 3.3]);
     if (show_electronics && build == "plate" && has_ctrl && power_switch) ctrl_3d(power_c, power_body, power_recess, [1.5, 2, 3]);
     if (has_nv) {
       if (show_electronics) nv_3d();
       color("steelblue") at_nv() translate([0, 0, z_plate_top]) bezel();
     }
-    if (show_switches) color("dimgray") for (k = keys) switch_3d(k);
-    if (show_keycaps) color("whitesmoke", 0.9) for (k = keys) keycap_3d(k);
   }
+  if (show_switches) translate([0, 0, explode * ex_sw]) color("dimgray") for (k = keys) switch_3d(k);
+  if (show_keycaps) translate([0, 0, explode * ex_cap]) color("whitesmoke", 0.9) for (k = keys) keycap_3d(k);
 }
 
 // ---------------------------------------------------------------- main
@@ -790,7 +939,8 @@ mirrored_for_side() {
       translate([0, 0, -1]) cylinder(d = screw_d, h = plate_t + 2);
     }
   }
-  if (part == "info") echo(holes = holes, bay = bay, ctrl = ctrl_rect, mcu = mcu, battery_c = batt_c, reset = reset_c, power = power_c, bumpons = bumpons, keys = keys, post = key_pcb_post, post_x = [key_pcb_post_x]);
+  if (part == "info") echo(stack = [z_pcb_bot, z_pcb_top, z_plate_bot, z_plate_top, z_mcu_bot], pod = [pod_iw, pod_il, pod_ih],
+                           holes = holes, bay = bay, ctrl = ctrl_rect, mcu = mcu, battery_c = batt_cc, reset = reset_c, power = power_c, bumpons = bumpons, keys = keys, post = key_pcb_post, post_x = [key_pcb_post_x]);
   if (part == "assembly")             assembly();
   else if (part == "section")         projection(cut = true) rotate([-90, 0, 0]) rotate([0, 0, -90]) translate([-section_x, 0, 0]) assembly();
   else if (part == "case")            case_bottom();
@@ -801,9 +951,5 @@ mirrored_for_side() {
   else if (part == "case_outline_2d") outline_2d();
   else if (part == "cavity_2d")       cavity_2d();
   else if (part == "pcb_2d")          pcb_2d();
-  else if (part == "pcb_outline_2d")  difference() {   // recommended Edge.Cuts for a Pacino PCB (build = "pcb")
-    offset(r = -pcb_gap) cavity_2d();
-    if (has_bay) battery_2d(1);                        // battery pokes up through the board
-    for (h = holes) translate(h) circle(d = 2.2);      // M2 clearance for the case bosses' screws
-  }
+  else if (part == "pcb_outline_2d")  pcb_board_2d();   // Edge.Cuts for the Pacino PCB (build = "pcb")
 }

@@ -46,15 +46,26 @@ for cols in 5 6; do for extra in no yes; do for bat in 902030 103450; do for dis
   echo "| [\`$name\`]($name/) | $cols | $keys | $bat | $disp | $size | ![]($name/preview_top.png) |" >> "$INDEX"
 done; done; done; done
 
-# one thin PCB-build variant (the board itself is a KiCad project -- see docs/pcb/)
-name="5col_extra2_bat902030_pcb"; args='-D build="pcb" -D battery_well_floor=1.2'
-if [[ -z ${ONLY:-} || $name == *${ONLY}* ]]; then
-  echo "=== $name"
-  rm -rf "$ROOT/$name"; mkdir -p "$ROOT/$name"
-  OUT="$ROOT/$name" SCAD_ARGS="$args" STL=0 PREVIEWS=min ./build.sh step mesh png 2>&1 | grep -E "STEP|ERROR|fail|Exception" | sed 's/^/  /' || true
-  rm -f "$ROOT/$name"/*.csg
+# the two slim PCB builds -- they differ only in where the cell lives, and each has its own board
+# in pcb/ (moving the cell moves the bay, two mounting holes and the reset/power positions)
+for slim in flat pod; do
+  if [[ $slim == flat ]]; then
+    name="5col_extra2_bat303040_pcb_flat"
+    args='-D build="pcb" -D battery_pod=false -D battery_type="custom" -D battery_custom=[30,40,3]'
+    bat="303040, flat (under the board)"
+  else
+    name="5col_extra2_bat902030_pcb_pod"
+    args='-D build="pcb" -D battery_pod=true'
+    bat="902030, in a plate pod"
+  fi
+  if [[ -z ${ONLY:-} || $name == *${ONLY}* ]]; then
+    echo "=== $name"
+    rm -rf "$ROOT/$name"; mkdir -p "$ROOT/$name"
+    OUT="$ROOT/$name" SCAD_ARGS="$args" STL=0 PREVIEWS=min ./build.sh step mesh png 2>&1 | grep -E "STEP|ERROR|fail|Exception" | sed 's/^/  /' || true
+    rm -f "$ROOT/$name"/*.csg
+  fi
   size=$(measure "$args")
-  echo "| [\`$name\`]($name/) | 5 | 20 | 902030 | no | $size | ![]($name/preview_top.png) |" >> "$INDEX"
-fi
+  echo "| [\`$name\`]($name/) | 5 | 20 | $bat | no | $size | ![]($name/preview_top.png) |" >> "$INDEX"
+done
 rm -f "$ROOT/_m.svg"
 echo "done: $ROOT/"
