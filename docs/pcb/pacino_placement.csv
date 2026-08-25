@@ -28,6 +28,6 @@ hole,H6,112,-48.2,0,172.0,168.2,"M2 clearance 2.2, screw passes into the case bo
 hole,H7,117.1,60.5,0,177.1,59.5,"M2 clearance 2.2, screw passes into the case boss below"
 hole,H8,117.6,9.2,0,177.6,110.8,"M2 clearance 2.2, screw passes into the case boss below"
 mcu,U1,102.3,43.5,0,162.3,76.5,"nice!nano footprint, USB towards +Y (model) / -Y (KiCad)"
-keepout,BAT,101.5,39.9,0,161.5,80.1,battery pokes through the board cutout here (already in the Edge.Cuts DXF)
+keepout,BAT,102.3,43.5,0,162.3,76.5,the cell's footprint: in the plate pod over the controller (default) or in the floor well under the board -- no cutout in either
 reset,RSW1,96.1,16.7,0,156.1,103.3,PCB-mounted reset (the plate has a window here)
 power,PWR1,108.1,16.7,0,168.1,103.3,PCB-mounted power slide switch (the plate has a window here)

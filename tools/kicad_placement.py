@@ -38,7 +38,7 @@ with open("docs/pcb/pacino_placement.csv", "w", newline="") as f:
     w.writerow(["mcu", "U1", mcu[0], mcu[1], mcu[2], round(KX0 + mcu[0], 3), round(KY0 - mcu[1], 3),
                 "nice!nano footprint, USB towards +Y (model) / -Y (KiCad)"])
     w.writerow(["keepout", "BAT", batt[0], batt[1], 0, round(KX0 + batt[0], 3), round(KY0 - batt[1], 3),
-                "battery pokes through the board cutout here (already in the Edge.Cuts DXF)"])
+                "the cell's footprint: in the plate pod over the controller (default) or in the floor well under the board -- no cutout in either"])
     w.writerow(["reset", "RSW1", rst[0], rst[1], 0, round(KX0 + rst[0], 3), round(KY0 - rst[1], 3),
                 "PCB-mounted reset (the plate has a window here)"])
     w.writerow(["power", "PWR1", pwr[0], pwr[1], 0, round(KX0 + pwr[0], 3), round(KY0 - pwr[1], 3),
