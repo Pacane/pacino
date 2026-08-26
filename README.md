@@ -239,7 +239,8 @@ right-hand corners clear, and the bay is sized so the top-right foot always fits
 a millimetre of wall outside its recess. Each bay foot then moves outward only by what its well
 forces — a couple of millimetres — and the model warns if one has nowhere to go. The wider cells pay
 for it in width: the 103450's bay is 45 mm instead of 44, and its case 148 mm. A 56.6 mm × 1 mm disc recess for a MagSafe
-magnet ring sits under the index/middle columns (`magsafe_d`, `magsafe_pos`; 0 = none).
+magnet ring sits under the index column (`magsafe_d`, `magsafe_pos`; 0 = none) — kept clear of the battery well,
+since the two cut the floor from opposite sides and would leave 0.2 mm where they overlap (the model warns).
 `out/preview_bottom.png` shows them all.
 
 ### How the plate attaches

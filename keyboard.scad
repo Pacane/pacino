@@ -199,8 +199,10 @@ bumpon_skin = 1.0;
 magsafe_d = 56;
 magsafe_depth = 1;
 magsafe_clearance = 0.3;
-// centre: under the index/middle columns, clear of the bumpons and bosses
-magsafe_pos = [60, 28];
+// centre: under the index column, clear of the bumpons and bosses -- and of the battery well, whose key-side
+// edge is on the bay line (x = 86.5): the recess is 1 mm into the underside and the well 1.3 mm into the top of the
+// floor, so where they overlap only 0.2 mm is left (the model warns).  [60, 28] ran 1.8 mm under the well.
+magsafe_pos = [57, 28];
 
 /* [Reset + power] */
 // through-hole parts dropped into pockets in the plate from above: the body passes through the plate,
@@ -435,6 +437,15 @@ if (has_bay && len(bay_foot_bot) == 0)
   echo("WARNING: no room for the bay's lower bumpon between the battery well and the wall -- add a control strip or a taller bay");
 if (has_bay && top_x + bumpon_r > bay_right + wall - bumpon_skin + 0.01)
   echo("WARNING: the bay's top-right bumpon would break through the wall -- widen the bay (bay_size_override)");
+// the MagSafe recess (magsafe_depth into the underside) must stay clear of the well (floor_t - battery_well_floor into
+// the top of the floor): where the two overlap only battery_well_floor - magsafe_depth of plastic is left
+well_left = batt_c[0] - battery[0] / 2 - well_clearance;
+magsafe_r = magsafe_d / 2 + magsafe_clearance;
+magsafe_well_gap = norm([magsafe_pos[0] - max(well_left, min(well_right, magsafe_pos[0])),
+                         magsafe_pos[1] - max(well_bottom, min(well_top, magsafe_pos[1]))]) - magsafe_r;
+if (well_on && magsafe_d > 0 && magsafe_well_gap < 0)
+  echo(str("WARNING: the MagSafe recess runs ", -magsafe_well_gap, " mm under the battery well, leaving ",
+           battery_well_floor - magsafe_depth, " mm of floor there -- move magsafe_pos"));
 bumpons = concat([[x_left - 4, -4], [x_left - 4, 42]], bumpon_positions,
                  has_bay ? concat([bay_foot_top], bay_foot_bot) : []);
 
