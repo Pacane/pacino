@@ -465,8 +465,14 @@ cannot tell you: a printed 1.6 mm sheet is floppier than FR-4, so don't judge fl
 
 20 keys, 39 nets, ~515 tracks, ~16 vias, two layers, 0.3 mm tracks / 0.2 mm clearance / 0.3 mm
 smallest drill — the cheapest process any fab offers. Hot-swap sockets, SOD-123 diodes (a
-through-hole 1N4148 fits the same land), the controller on machined low-profile sockets under the
-plate window, reset and slide switch poking up through theirs. The silkscreen outlines every
+through-hole 1N4148 fits the same land), the controller on 3.5 mm machined low-profile sockets under the
+plate window, reset and slide switch poking up through theirs. The controller gets **bare machined pins**
+(Mill-Max 3320 or diode legs) — not a pin header with a plastic body: the board has to sit directly on the
+sockets, 3.5 mm + its own thickness putting its back flush with the plate top and its USB receptacle inside
+the socket gap. A 2.5–3 mm header body between board and sockets lifts the whole controller by that much and
+pushes the USB receptacle up into the plate at the wall. The window around the controller runs right up to the
+wall line at the USB end (the receptacle overhangs the board there), with 1.5 mm of clearance elsewhere;
+`part = "clash"` renders whatever the plate hits — it should be empty. The silkscreen outlines every
 hot-swap socket on both faces, so each one goes where its outline is — and because the outlines on
 the two faces are the 180° rotation of each other, the way the right half differs is visible on the
 board rather than only in the instructions.

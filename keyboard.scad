@@ -20,7 +20,8 @@ include <layouts/badtemper.scad>
 /* [Output] */
 part = "assembly"; // [assembly, section, case, plate, bezel, insert_test, pcb_test, clash, plate_2d, case_outline_2d, cavity_2d, pcb_2d, pcb_outline_2d, bezel_2d, info]
 // part = "section": 2D cross-section of the assembly through the plane x = section_x (Y across, Z up)
-// part = "clash": the intersection of the case and the plate as assembled -- empty when they fit
+// part = "clash": the case intersected with the plate as assembled, plus (PCB build) the plate with the
+// controller -- empty when everything fits
 section_x = 123;
 side = "left"; // [left, right, both]
 // gap between the halves when side = "both"
@@ -73,8 +74,13 @@ cavity_depth = 0;
 // battery -- which sits on the floor, poking through a cutout in the PCB -- fit under the plate
 pcb_lift = 0;
 pcb_t = 1.6;
-// pcb build: MCU socket height above the PCB
+// pcb build: MCU socket height above the PCB. The controller board must sit DIRECTLY on the sockets -- bare
+// machined pins (Mill-Max 3320 / diode legs), no header body between them: 3.5 + the board = its back flush
+// with the plate top, and its USB receptacle (3.2 mm, component side down) inside the socket gap.
 mcu_socket_h = 3.5;
+// pcb build: plate window around the controller, clearance per side (the pod build uses the pod's interior
+// width instead). Its USB end always runs to the wall line: see mcu_window_2d.
+mcu_window_margin = 1.5;
 // pcb build: part = "pcb_test" prints a stand-in for the board at pcb_t thick -- the real outline and
 // every hole a switch, the controller or the two switches passes through -- so the whole stack can be
 // test-fitted before a board is ordered. The stand-ins for the hot-swap sockets are bumps on the
@@ -404,6 +410,8 @@ pod_il  = max(battery[1] + 2 * pod_clearance, mcu[4] + 2.4);
 // highest: with the stock 3.5 mm sockets the controller's back finishes 0.05 mm proud of the plate,
 // and taller sockets lift it (and the cell) further, so add whatever it stands proud by
 pod_ih  = battery[2] + pod_clearance + max(0, mcu_socket_h + mcu_pcb_t - plate_to_pcb);
+// the plate window over a PCB-mounted controller (pod: the pod's interior width -- the cell drops through it)
+mcu_win = has_pod ? [pod_iw, mcu[4] + 2] : [mcu[3] + 2 * mcu_window_margin, mcu[4] + 2 * mcu_window_margin];
 usb = has_bay ? [mcu[0], bay_top - 1 + mcu_offset[1]] : (layout == "badtemper" ? badtemper_usb : cheapino_usb);
 
 // nice!view pocket: centre, bezel screw boss y positions, bezel size
@@ -587,16 +595,28 @@ module cavity_2d() {
 // outer wall surface
 module outline_2d() offset(r = wall) cavity_2d();
 
-module plate_windows_2d() intersection() {
-  offset(r = -lip_clearance - lip_w) cavity_2d();        // never cut the rim that sits on the wall
-  union() {
-    for (w = plate_windows) translate([w[0], w[1]]) rotate(w[4]) rect(w[2], w[3]);
-    if (build == "pcb") at_mcu() rect(has_pod ? pod_iw : mcu[3] + 2, mcu[4] + 2);   // window over a PCB-mounted MCU (the cell drops through it into the pod)
-    // PCB-mounted switches poke up through these; 0.3 mm clearance each side, not 0.5, because the
-    // two windows are only 1.65 mm apart and the rib between them is plate
-    if (build == "pcb" && has_ctrl && reset_button) translate(reset_c) rect(reset_body[0] + 0.6, reset_body[1] + 0.6);
-    if (build == "pcb" && has_ctrl && power_switch) translate(power_c) rect(power_body[0] + 0.6, power_body[1] + 0.6);
-  }
+// window over a PCB-mounted controller. Clipped at the wall line, not 1.4 mm inside it like the other windows:
+// the board's USB end is 1 mm from the wall and its USB receptacle overhangs that end by ~1.3 mm right under
+// the plate, so a rim or lip inside the wall line there lands on the controller (it held the plate 1.5 mm up).
+// The lip is cut away across it too.
+module mcu_window_2d() intersection() {
+  cavity_2d();
+  at_mcu() rect(mcu_win[0], mcu_win[1]);
+}
+
+module plate_windows_2d() {
+  if (len(plate_windows) > 0 || (build == "pcb" && has_ctrl && (reset_button || power_switch)))   // (guarded: an empty operand breaks FreeCAD)
+    intersection() {
+      offset(r = -lip_clearance - lip_w) cavity_2d();        // never cut the rim that sits on the wall
+      union() {
+        for (w = plate_windows) translate([w[0], w[1]]) rotate(w[4]) rect(w[2], w[3]);
+        // PCB-mounted switches poke up through these; 0.3 mm clearance each side, not 0.5, because the
+        // two windows are only 1.65 mm apart and the rib between them is plate
+        if (build == "pcb" && has_ctrl && reset_button) translate(reset_c) rect(reset_body[0] + 0.6, reset_body[1] + 0.6);
+        if (build == "pcb" && has_ctrl && power_switch) translate(power_c) rect(power_body[0] + 0.6, power_body[1] + 0.6);
+      }
+    }
+  if (build == "pcb") mcu_window_2d();
 }
 
 module plate_2d() difference() {
@@ -810,7 +830,7 @@ module pod_2d(o = 0) at_mcu() rect(pod_iw + 2 * o, pod_il + 2 * o);
 
 module pod_solid() translate([0, 0, z_plate_top - eps])
   linear_extrude(pod_ih + pod_wall + eps) pod_2d(pod_wall);
-module pod_cut() translate([0, 0, z_plate_top]) linear_extrude(pod_ih) pod_2d(0);
+module pod_cut() translate([0, 0, z_plate_top - 2 * eps]) linear_extrude(pod_ih + 2 * eps) pod_2d(0);   // starts just below the plate top: the controller back is 0.05 proud there (2 eps: no face coincident with pod_solid)
 
 module plate() {
   plate_hull();
@@ -826,6 +846,7 @@ module plate_hull() difference() {
         offset(r = -lip_clearance) cavity_2d();
         offset(r = -lip_clearance - lip_w) cavity_2d();
         for (h = holes) translate(h) circle(d = boss_d + 2 * lip_clearance + 0.4);   // clear the boss tops
+        if (build == "pcb") mcu_window_2d();   // and the controller's USB end (see mcu_window_2d)
       }
     // spacer bosses standing on the board.  The holes sit 0.5 mm inside the wall line, so a full cylinder would
     // reach 2 mm into the wall -- which runs up to the plate -- and land on the wall top instead of the board,
@@ -1012,7 +1033,10 @@ mirrored_for_side() {
   else if (part == "case_outline_2d") outline_2d();
   else if (part == "cavity_2d")       cavity_2d();
   else if (part == "pcb_test")        pcb_test();
-  else if (part == "clash")           intersection() { case_bottom(); plate(); }
+  else if (part == "clash")           union() {
+    intersection() { case_bottom(); plate(); }
+    if (build == "pcb") intersection() { plate(); mcu_3d(); }   // the controller passes through its window
+  }
   else if (part == "pcb_2d")          pcb_2d();
   else if (part == "pcb_outline_2d")  pcb_board_2d();   // Edge.Cuts for the Pacino PCB (build = "pcb")
 }
