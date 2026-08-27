@@ -54,6 +54,9 @@ grid_thumbs = [[71.5, -15.5, 80, 1.25], [92.5, -21.5, 68, 1.25], [111.7, -31.7, 
 // wall line, so they merge into the wall) keeping the matrix clear for hand-wiring; >= 2 mm to switch bodies.
 // (Two on the left edge follow the outer column, and two on the bay's right-hand corners are automatic.)
 grid_holes = [[38.1, 66], [76.2, 57.1], [58.5, -4.4], [112, -48.2]];
+// pcb build: the last of those (thumb end) stands 2.5 mm in from the wall instead of on it, so its insert hole
+// is clear of the wall rising past the pillar (see pcb_screw_channel); [] = leave it on the wall line
+pcb_thumb_hole = [112.3, -46.3];
 
 /* [Switch] */
 switch_type = "mx"; // [mx, choc]
@@ -109,6 +112,9 @@ pod_clearance = 0.4;
 
 /* [Case] */
 wall = 2.4;
+// pcb build: thicker, so the screw channels above the pillars (pcb_screw_channel) still leave 1.5 mm of wall
+pcb_wall = 3;
+wall_e = build == "pcb" ? pcb_wall : wall;
 // floor thickness (the bumpon recesses take bumpon_depth out of it)
 floor_t = 2.5;
 // keys = hull the keycaps (+ bay) with key_margin / corner_r;  pcb = follow the layout's Edge.Cuts + pcb_gap
@@ -313,6 +319,11 @@ boss_hole_depth = 5;
 screw_d = 2.3;
 // pcb build: spacer boss under the plate
 plate_boss_d = 5;
+// pcb build: the pillars stop at the board while the wall keeps rising past them, and the pillars on the wall
+// line have their insert holes reaching 1.2 mm under it -- so a channel this wide runs up the inside of the wall
+// over every hole, from the pillar top to the wall top, and the insert (3.5 OD) and screw drop straight in.
+// 0 = none (then only the pillars standing clear of the wall can take an insert)
+pcb_screw_channel = 4;
 // locating lip under the plate (height, width); 0 = none
 lip_h = 1;
 lip_w = 1.2;
@@ -383,7 +394,7 @@ bumpon_r = bumpon_d / 2 + bumpon_clearance;                 // recess radius
 // enough for the top-right foot to fit beside it: cell + well + foot + 1 mm of skin outside the recess
 batt_bay_margin = has_pod ? 0 : bay_margin;
 batt_mx    = well_on ? well_clearance : bay_margin;           // cell -> bay left wall
-foot_bay_w = well_on ? batt_mx + battery[0] + well_clearance + 0.3 + 2 * bumpon_r + bumpon_skin - wall : 0;
+foot_bay_w = well_on ? batt_mx + battery[0] + well_clearance + 0.3 + 2 * bumpon_r + bumpon_skin - wall_e : 0;
 
 bay_w  = bay_size_override[0] > 0 ? bay_size_override[0]
        : max(battery[0] + 2 * batt_bay_margin, foot_bay_w, elec_w + bay_margin + boss_d + 1);   // room for the corner boss beside the cradle
@@ -453,10 +464,10 @@ bot_dx = max(0, bot_x - well_right);
 bot_y  = !well_on ? bay_y0 + 12
        : min(bay_y0 + 12, well_bottom - sqrt(max(0, foot_keep * foot_keep - bot_dx * bot_dx)));
 bay_foot_top = [top_x, bay_top - 8];
-bay_foot_bot = bot_y - bumpon_r >= bay_y0 - wall + 1.0 ? [[bot_x, bot_y]] : [];   // still on the floor?
+bay_foot_bot = bot_y - bumpon_r >= bay_y0 - wall_e + 1.0 ? [[bot_x, bot_y]] : [];   // still on the floor?
 if (has_bay && len(bay_foot_bot) == 0)
   echo("WARNING: no room for the bay's lower bumpon between the battery well and the wall -- add a control strip or a taller bay");
-if (has_bay && top_x + bumpon_r > bay_right + wall - bumpon_skin + 0.01)
+if (has_bay && top_x + bumpon_r > bay_right + wall_e - bumpon_skin + 0.01)
   echo("WARNING: the bay's top-right bumpon would break through the wall -- widen the bay (bay_size_override)");
 // the MagSafe recess (magsafe_depth into the underside) must stay clear of the well (floor_t - battery_well_floor into
 // the top of the floor): where the two overlap only battery_well_floor - magsafe_depth of plastic is left
@@ -470,10 +481,15 @@ if (well_on && magsafe_d > 0 && magsafe_well_gap < 0)
 bumpons = concat([[x_left - 4, -4], [x_left - 4, 42]], bumpon_positions,
                  has_bay ? concat([bay_foot_top], bay_foot_bot) : []);
 
-// bosses on the bay walls: top-right corner and (control-bay) bottom-right corner
-bay_holes = has_bay ? [[bay_right - 3, bay_top - 0.5], [bay_right - 2.5, (has_ctrl ? ctrl_rect[1] : bay[1]) + 0.5]] : [];
+// bosses on the bay walls: top-right corner and (control-bay) bottom-right corner, on the wall line. pcb build:
+// the bottom one moves 3 mm in from both walls so its insert hole is clear of the wall rising past the pillar
+// (see pcb_screw_channel); the top one stays put, since pulled in it would sit over the bay's top bumpon recess
+bh = build == "pcb" ? [3.5, 3] : [2.5, 0.5];   // bottom hole [x inset, y inset]
+bay_holes = has_bay ? [[bay_right - 3, bay_top - 0.5], [bay_right - bh[0], (has_ctrl ? ctrl_rect[1] : bay[1]) + bh[1]]] : [];
 left_holes = [[x_left - 11.5, 22], [x_left, -11.5]];   // left wall mid-height, below the outermost column
-holes = layout == "cheapino" ? cheapino_holes : layout == "badtemper" ? badtemper_holes : concat(left_holes, grid_holes, bay_holes);
+grid_holes_e = build == "pcb" && len(pcb_thumb_hole) == 2
+  ? concat([for (i = [0 : len(grid_holes) - 2]) grid_holes[i]], [pcb_thumb_hole]) : grid_holes;
+holes = layout == "cheapino" ? cheapino_holes : layout == "badtemper" ? badtemper_holes : concat(left_holes, grid_holes_e, bay_holes);
 
 batt_z0     = battery_well_floor > 0 ? battery_well_floor : floor_t;
 // board height above the battery: flat back needs 1.5 (ledge + air); flipped, the components hang
@@ -522,9 +538,9 @@ if (build == "pcb" && mcu_flipped && mcu_socket_h < 3.2 + 0.3)
   echo(str("WARNING: mcu_socket_h = ", mcu_socket_h, " is shorter than the USB connector needs; ",
            "the connector would sit ", 3.2 + 0.3 - mcu_socket_h, " mm inside the PCB -- use 3.5 mm sockets"));
 
-if (has_pod && (mcu[1] + pod_il / 2 + pod_wall > bay_top + wall
-             || mcu[0] - pod_iw / 2 - pod_wall < bay[0] - wall
-             || mcu[0] + pod_iw / 2 + pod_wall > bay_right + wall))
+if (has_pod && (mcu[1] + pod_il / 2 + pod_wall > bay_top + wall_e
+             || mcu[0] - pod_iw / 2 - pod_wall < bay[0] - wall_e
+             || mcu[0] + pod_iw / 2 + pod_wall > bay_right + wall_e))
   echo(str("WARNING: the battery pod (", pod_iw + 2 * pod_wall, " x ", pod_il + 2 * pod_wall,
            ") overhangs the plate around the bay -- use a smaller cell or widen the bay"));
 
@@ -548,7 +564,7 @@ if (cradle && mcu_flipped && z_batt_top > z_mcu_bot - 2.5)
 if (cradle && z_mcu_top > z_plate_bot)
   echo(str("WARNING: MCU board top (z=", z_mcu_top, ") is above the plate underside (z=", z_plate_bot, ") — increase cavity_depth"));
 
-x_extent = wall + (cavity_from == "pcb"
+x_extent = wall_e + (cavity_from == "pcb"
   ? max([for (p = pcb_outline) p[0]]) + pcb_gap
   : max(concat([for (k = keys) k[0] + px], has_bay ? [bay[0] + bay[2]] : [])) + key_margin);
 
@@ -579,7 +595,8 @@ module pcb_2d() difference() {
 }
 
 // the board for build = "pcb": the cavity less pcb_gap, the M2 clearances (the bosses' screws pass
-// through them; seven of the eight fall on the edge and come out as notches), and -- only when the
+// through them; the five on the wall line come out as notches in the edge, the three pillars standing
+// clear of the wall get real holes), and -- only when the
 // cell is in the floor rather than the plate pod -- the cutout it pokes through.  This is exactly
 // what tools/pcb_gen.py turns into Edge.Cuts.
 module pcb_board_2d() difference() {
@@ -605,7 +622,7 @@ module cavity_2d() {
 }
 
 // outer wall surface
-module outline_2d() offset(r = wall) cavity_2d();
+module outline_2d() offset(r = wall_e) cavity_2d();
 
 // window over a PCB-mounted controller. Clipped at the wall line, not 1.4 mm inside it like the other windows:
 // the board's USB end is 1 mm from the wall and its USB receptacle overhangs that end by ~1.3 mm right under
@@ -644,7 +661,7 @@ module plate_2d() difference() {
 // a box punched through the wall: local +X is outward
 module wall_cut(x, y, ang, w, h, z0) {
   translate([x, y, z0]) rotate(ang)
-    translate([-4, -w / 2, 0]) cube([4 + pcb_gap + key_margin + wall + 6, w, h]);
+    translate([-4, -w / 2, 0]) cube([4 + pcb_gap + key_margin + wall_e + 6, w, h]);
 }
 
 module wall_cutouts() {
@@ -718,6 +735,8 @@ module case_bottom() difference() {
     battery_fence();
   }
   for (h = holes) translate([h[0], h[1], boss_top - boss_hole_depth_e]) cylinder(d = boss_hole_d, h = boss_hole_depth_e + 1);
+  if (build == "pcb" && pcb_screw_channel > 0)   // screw channels up the inside of the wall over the holes
+    for (h = holes) translate([h[0], h[1], boss_top]) cylinder(d = pcb_screw_channel, h = z_wall_top - boss_top + 1);
   wall_cutouts();
   if (bumpon_d > 0) for (b = bumpons) translate([b[0], b[1], -1]) cylinder(d = bumpon_d + 2 * bumpon_clearance, h = bumpon_depth + 1);
   if (magsafe_d > 0) translate([magsafe_pos[0], magsafe_pos[1], -1]) cylinder(d = magsafe_d + 2 * magsafe_clearance, h = magsafe_depth + 1, $fn = 128);

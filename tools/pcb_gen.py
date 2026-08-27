@@ -1056,14 +1056,17 @@ which is GND/RST one way up and RST/GND the other.
 
 %(bom)s
 
-Plus, from the case: 8 x M2x4x3.5 heat-set inserts, 8 x M2 screws, 8 x 10 mm bumpons.
+Plus, from the case: 8 x M2x3x3.5 heat-set inserts, 8 x M2x10 screws, 8 x 10 mm bumpons.
 
 ## Why the mounting holes are notches
 
-Seven of the eight are half-circles in the edge rather than holes through the board, and the eighth
-(between the columns) is a real hole. That follows from the case: its screw bosses sit 0.5 mm inside
-the inner wall line so they merge into the wall, and the board is the cavity less 0.5 mm -- so each
-screw's centre lands exactly on the board's edge.
+Five of the eight are half-circles in the edge rather than holes through the board; the other three
+(the thumb end, the bay's bottom corner and the one between the columns) are real holes. That follows
+from the case: five of its screw bosses sit 0.5 mm inside the inner wall line so they merge into the
+wall, and the board is the cavity less 0.5 mm -- so those screws' centres land exactly on the board's
+edge. The other three bosses stand 2.5-3 mm clear of the wall, because the wall keeps rising past the
+bosses in this build and an insert hole at the wall line would be tucked under it; the five that stay
+on the line get a 4 mm channel up the inside of the wall instead, so their inserts and screws drop in.
 
 Nothing is bolted through the board. It is **clamped**: the case's 6 mm bosses come up to its
 underside and the plate's 5 mm spacer bosses come down onto its top, about 8 mm2 of board between

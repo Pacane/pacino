@@ -405,10 +405,16 @@ switch), and there is nothing left to remove.
 
 Hardware for the slim build: the bosses stop at the board, so they are only 4.9 mm tall and their insert
 holes 4 mm deep with 0.9 mm of floor under them — use **M2 × 3 × 3.5 heat-set inserts** (the hand-wired case
-takes 4 mm ones) and **M2 × 10 screws** (1.5 plate + 3.5 spacer + 1.6 board + 3 mm of thread). Two 3 mm floor
-pillars (`pcb_posts`) stand under the board between the bosses, in the column gaps clear of the sockets,
-switch pins and diodes, so a 55 mm span of board is not hanging on its corners; the model warns if one is
-moved onto a socket, and the board generator keeps diodes off them.
+takes 4 mm ones) and **M2 × 10 screws** (1.5 plate + 3.5 spacer + 1.6 board + 3 mm of thread). Five of the
+eight bosses sit on the wall line like the hand-wired ones, and since the wall keeps rising 5 mm past their
+tops, their insert holes would be tucked 1.2 mm under it — so a 4 mm channel (`pcb_screw_channel`) runs up
+the inside of the wall over each hole, the insert and screw drop straight in, and the slim case's wall is
+3 mm (`pcb_wall`) to keep 1.5 mm behind the channel. The other three (thumb end, the bay's bottom corner, and
+the one by the thumb keys) stand 2.5–3 mm clear of the wall as full round bosses; the board gets three real
+mounting holes there and five edge notches at the wall-line ones. Two 3 mm floor pillars (`pcb_posts`)
+stand under the board between the bosses, in the column gaps clear of the sockets, switch pins and diodes,
+so a 55 mm span of board is not hanging on its corners; the model warns if one is moved onto a socket, and
+the board generator keeps diodes off them.
 
 What sets it is where the cell goes, because **below the board every millimetre of battery is a
 millimetre of case**. Above it, the 3.5 mm the MX geometry hands you is free — the socketed
