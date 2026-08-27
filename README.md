@@ -478,7 +478,9 @@ plate window, reset and slide switch poking up through theirs. The controller ge
 sockets, 3.5 mm + its own thickness putting its back flush with the plate top and its USB receptacle inside
 the socket gap. A 2.5–3 mm header body between board and sockets lifts the whole controller by that much and
 pushes the USB receptacle up into the plate at the wall. The window around the controller runs right up to the
-wall line at the USB end (the receptacle overhangs the board there), with 1.5 mm of clearance elsewhere;
+wall line at the USB end (the receptacle overhangs the board there) and the plate's rim is slotted over the USB
+notch, the same 12 mm as the wall, so the port is open from above rather than hidden under a bridge
+(`usb_plate_slot`); the window has 2 mm of clearance on the other sides;
 `part = "clash"` renders whatever the plate hits — it should be empty. The silkscreen outlines every
 hot-swap socket on both faces, so each one goes where its outline is — and because the outlines on
 the two faces are the 180° rotation of each other, the way the right half differs is visible on the

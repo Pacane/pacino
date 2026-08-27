@@ -80,7 +80,7 @@ pcb_t = 1.6;
 mcu_socket_h = 3.5;
 // pcb build: plate window around the controller, clearance per side (the pod build uses the pod's interior
 // width instead). Its USB end always runs to the wall line: see mcu_window_2d.
-mcu_window_margin = 1.5;
+mcu_window_margin = 2;
 // pcb build: part = "pcb_test" prints a stand-in for the board at pcb_t thick -- the real outline and
 // every hole a switch, the controller or the two switches passes through -- so the whole stack can be
 // test-fitted before a board is ordered. The stand-ins for the hot-swap sockets are bumps on the
@@ -321,6 +321,10 @@ lip_clearance = 0.2;
 /* [Cutouts] */
 // USB slot at the MCU's connector end: [width, height, z relative to the MCU board top]; open to the top
 usb_cutout = [12, 7, -1.5];
+// pcb build: also cut the plate's rim over the USB notch, the same width as the notch. The receptacle sits right
+// under that rim and a plug's overmold is taller than the notch, so a bridged rim hides the port; with the slot the
+// plate edge is open above it, like the wall. false = the plate bridges the notch
+usb_plate_slot = true;
 // extra wall cutouts: [x, y, outward_normal_angle_deg, width, height, z_above_floor]
 extra_cutouts = [];
 // extra plate windows [cx, cy, w, h, rot]
@@ -897,6 +901,8 @@ module plate_hull() difference() {
   if (build == "plate" && has_ctrl && reset_button) ctrl_cut(reset_c, reset_body, reset_legs, reset_recess);
   if (build == "plate" && has_ctrl && power_switch) ctrl_cut(power_c, power_body, power_legs, power_recess);
   for (h = holes) translate([h[0], h[1], z_plate_bot - 5]) cylinder(d = screw_d, h = plate_t + 10);
+  if (build == "pcb" && has_bay && usb_plate_slot && usb_cutout[0] > 0)   // open the rim over the USB notch (see usb_plate_slot)
+    wall_cut(usb[0], usb[1], mcu[2] + 90, usb_cutout[0], plate_t + lip_height + 2, z_plate_bot - lip_height - 1);
   if (cradle) {
     cradle_cuts();
     if (!mcu_flipped) wall_cutouts();   // unflipped only: the USB plug crosses the plate level
