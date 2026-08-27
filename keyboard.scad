@@ -18,8 +18,9 @@ include <layouts/cheapino.scad>
 include <layouts/badtemper.scad>
 
 /* [Output] */
-part = "assembly"; // [assembly, section, case, plate, bezel, insert_test, pcb_test, plate_2d, case_outline_2d, cavity_2d, pcb_2d, pcb_outline_2d, bezel_2d, info]
+part = "assembly"; // [assembly, section, case, plate, bezel, insert_test, pcb_test, clash, plate_2d, case_outline_2d, cavity_2d, pcb_2d, pcb_outline_2d, bezel_2d, info]
 // part = "section": 2D cross-section of the assembly through the plane x = section_x (Y across, Z up)
+// part = "clash": the intersection of the case and the plate as assembled -- empty when they fit
 section_x = 123;
 side = "left"; // [left, right, both]
 // gap between the halves when side = "both"
@@ -826,8 +827,14 @@ module plate_hull() difference() {
         offset(r = -lip_clearance - lip_w) cavity_2d();
         for (h = holes) translate(h) circle(d = boss_d + 2 * lip_clearance + 0.4);   // clear the boss tops
       }
+    // spacer bosses standing on the board.  The holes sit 0.5 mm inside the wall line, so a full cylinder would
+    // reach 2 mm into the wall -- which runs up to the plate -- and land on the wall top instead of the board,
+    // holding the plate 3.5 mm proud.  Clipped to the cavity, flush with the lip's outer face (part = "clash" checks).
     if (build == "pcb")
-      for (h = holes) translate([h[0], h[1], z_pcb_top]) cylinder(d = plate_boss_d, h = z_plate_bot - z_pcb_top + eps);
+      translate([0, 0, z_pcb_top]) linear_extrude(z_plate_bot - z_pcb_top + eps) intersection() {
+        union() for (h = holes) translate(h) circle(d = plate_boss_d);
+        offset(r = -lip_clearance) cavity_2d();
+      }
     if (cradle) cradle_solid();
     if (has_nv) nv_solid();
     if (build == "plate" && has_ctrl && reset_button) ctrl_solid(reset_c, reset_body, reset_recess);
@@ -1005,6 +1012,7 @@ mirrored_for_side() {
   else if (part == "case_outline_2d") outline_2d();
   else if (part == "cavity_2d")       cavity_2d();
   else if (part == "pcb_test")        pcb_test();
+  else if (part == "clash")           intersection() { case_bottom(); plate(); }
   else if (part == "pcb_2d")          pcb_2d();
   else if (part == "pcb_outline_2d")  pcb_board_2d();   // Edge.Cuts for the Pacino PCB (build = "pcb")
 }
