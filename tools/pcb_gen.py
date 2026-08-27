@@ -84,7 +84,7 @@ def model_info():
         m = re.search(name + r' = (\[.*?\])(?=, [a-z_]+ =|$)', info)
         if not m: sys.exit("could not read %s from the model:\n%s" % (name, info[:400]))
         return eval(m.group(1))
-    return {k: arr(k) for k in ("keys", "holes", "mcu", "reset", "power", "stack", "bay", "ctrl")}
+    return {k: arr(k) for k in ("keys", "holes", "mcu", "reset", "power", "stack", "bay", "ctrl", "pcb_posts")}
 
 def dxf_polylines(path):
     L = open(path).read().split("\n"); out = []; i = 0
@@ -351,6 +351,7 @@ def diode_pads(row, sw):
          "off": (0, -1.05), "net": sw},
     ]
 D_CRT = (-3.0, -1.2, 2.6, 2.6)
+POST_CRT = (-2.0, -2.0, 2.0, 2.0)   # a 3 mm floor pillar of the case stands under the board here, + 0.5 all round
 
 MCU_PIN = {}      # pad number -> (x, y) in footprint coords
 for i in range(1, 13):
@@ -666,6 +667,8 @@ def build():
         at = K(k); rot = k[2]
         placed.append((quad(at[0], at[1], rot, MX_CRT), "SW%d" % (i + 1)))
     boss = [(K(h)[0], K(h)[1], 3.0) for h in holes]
+    for p in info["pcb_posts"]:                   # the case's floor pillars press on the underside: no diode there
+        placed.append((quad(K(p)[0], K(p)[1], 0, POST_CRT), "POST"))
 
     def try_diode(i, lx, ly, against):
         k = keys[i]; at = K(k); rot = k[2]

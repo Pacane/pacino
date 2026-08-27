@@ -403,6 +403,13 @@ always the board in the repo rather than a picture of an older one.*
 stack is 2.5 floor + 2.4 (hot-swap sockets) + 1.6 board + 5.0 (MX plate-to-PCB, fixed by the
 switch), and there is nothing left to remove.
 
+Hardware for the slim build: the bosses stop at the board, so they are only 4.9 mm tall and their insert
+holes 4 mm deep with 0.9 mm of floor under them — use **M2 × 3 × 3.5 heat-set inserts** (the hand-wired case
+takes 4 mm ones) and **M2 × 10 screws** (1.5 plate + 3.5 spacer + 1.6 board + 3 mm of thread). Two 3 mm floor
+pillars (`pcb_posts`) stand under the board between the bosses, in the column gaps clear of the sockets,
+switch pins and diodes, so a 55 mm span of board is not hanging on its corners; the model warns if one is
+moved onto a socket, and the board generator keeps diodes off them.
+
 What sets it is where the cell goes, because **below the board every millimetre of battery is a
 millimetre of case**. Above it, the 3.5 mm the MX geometry hands you is free — the socketed
 controller already lives there, finishing flush with the plate top, and costs no height at all.

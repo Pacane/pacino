@@ -88,6 +88,14 @@ mcu_window_margin = 1.5;
 pcb_test_sockets = true;
 // holes come out undersize when printed; these are the drilled sizes plus a little
 pcb_test_slop = 0.2;
+// pcb build: floor pillars supporting the board from below between the mounting bosses, [x, y] each, pcb_post
+// square, stopping pcb_post_gap under the board. They go in the column gaps, clear of what hangs under the
+// board: the hot-swap socket on the pin side of every key, the switch's post and pins, and the diode 8.8 mm
+// below each key. The model warns if one lands in those zones and tools/pcb_gen.py keeps diodes off them.
+// [] = none. Defaults: one in the ring/middle column gap high up, one in the middle/index gap low down.
+pcb_posts = [[28.6, 45.5], [47.8, 20]];
+pcb_post = 3;
+pcb_post_gap = 0.1;
 // pcb build: carry the cell in a pod that is part of the plate, directly over the socketed controller
 // (whose bare back finishes flush with the plate top), instead of in a well in the case floor. Below the
 // board every millimetre of cell is a millimetre of case; the 3.5 mm above it is fixed by the MX
@@ -645,6 +653,22 @@ module wall_cutouts() {
   if (len(extra_cutouts) > 0) for (c = extra_cutouts) wall_cut(c[0], c[1], c[2], c[3], c[4], c[5]);
 }
 
+// pcb build: every floor pillar must miss the socket + switch-pin zone (x -8.71..7.47, y -6.5..7.13 in the key's
+// frame) and the diode band (x -3.5..3.5, y -11..-6.5) of every key, by 0.5 mm
+function post_local(p, k) = let(dx = p[0] - k[0], dy = p[1] - k[1], c = cos(k[2]), s = sin(k[2]))
+  [dx * c + dy * s, -dx * s + dy * c];
+function post_hits(p, k) = let(l = post_local(p, k), h = pcb_post / 2 + 0.5)
+  (abs(l[0] + 0.62) < 8.09 + h && abs(l[1] - 0.315) < 6.815 + h) ||
+  (abs(l[0]) < 3.5 + h && abs(l[1] + 8.75) < 2.25 + h);
+if (build == "pcb") for (p = pcb_posts, i = [0 : len(keys) - 1]) if (post_hits(p, keys[i]))
+  echo(str("WARNING: pcb_post at ", p, " lands under key ", i + 1, "'s socket, pins or diode -- move it"));
+
+// the insert hole must leave floor under it: in the PCB build the bosses stop at the board, only z_pcb_bot tall
+boss_top_e = build == "pcb" ? z_pcb_bot : z_plate_bot;
+boss_hole_depth_e = min(boss_hole_depth, boss_top_e - 0.9);
+if (boss_hole_depth_e < boss_hole_depth)
+  echo(str("NOTE: boss holes are ", boss_hole_depth_e, " mm deep (", boss_top_e, " mm bosses, 0.9 mm of floor kept) -- use inserts no longer than that (M2 x 3)"));
+
 module battery_fence() if (has_bay && !has_pod && battery_fence[0] > 0 && battery_well_floor == 0)
   translate([0, 0, floor_t - eps]) linear_extrude(battery_fence[0] + eps) difference() {
     battery_2d(battery_clearance + battery_fence[1]);
@@ -658,6 +682,11 @@ module key_pcb_posts() if (build == "plate" && key_pcbs && key_pcb_post[0] > 0)
   for (k = keys, sx = [-1, 1], sy = [-1, 1]) at(k)
     translate([sx * key_pcb_post_x - key_pcb_post[0] / 2, sy * (py / 2 - key_pcb_post[1] / 2) - key_pcb_post[1] / 2, floor_t - eps])
       cube([key_pcb_post[0], key_pcb_post[1], z_key_pcb_bot - key_pcb_post_gap - floor_t + eps]);
+
+// pcb build: floor pillars under the main board between the bosses (see pcb_posts)
+module pcb_posts_3d() if (build == "pcb" && pcb_post > 0)
+  for (p = pcb_posts) translate([p[0] - pcb_post / 2, p[1] - pcb_post / 2, floor_t - eps])
+    cube([pcb_post, pcb_post, z_pcb_bot - pcb_post_gap - floor_t + eps]);
 
 // floor support at the controller's USB end (the far end stands on the plate's corner tabs / ledge):
 // unflipped, one post under the connector's centre; flipped, two posts under the component side's outer
@@ -675,6 +704,7 @@ module case_bottom() difference() {
   boss_top = build == "pcb" ? z_pcb_bot : z_plate_bot;
   union() {
     key_pcb_posts();
+    pcb_posts_3d();
     mcu_end_post();
     difference() {
       linear_extrude(z_wall_top) outline_2d();
@@ -683,7 +713,7 @@ module case_bottom() difference() {
     for (h = holes) translate([h[0], h[1], 0]) cylinder(d = boss_d, h = boss_top);
     battery_fence();
   }
-  for (h = holes) translate([h[0], h[1], boss_top - boss_hole_depth]) cylinder(d = boss_hole_d, h = boss_hole_depth + 1);
+  for (h = holes) translate([h[0], h[1], boss_top - boss_hole_depth_e]) cylinder(d = boss_hole_d, h = boss_hole_depth_e + 1);
   wall_cutouts();
   if (bumpon_d > 0) for (b = bumpons) translate([b[0], b[1], -1]) cylinder(d = bumpon_d + 2 * bumpon_clearance, h = bumpon_depth + 1);
   if (magsafe_d > 0) translate([magsafe_pos[0], magsafe_pos[1], -1]) cylinder(d = magsafe_d + 2 * magsafe_clearance, h = magsafe_depth + 1, $fn = 128);
@@ -1022,7 +1052,7 @@ mirrored_for_side() {
     }
   }
   if (part == "info") echo(stack = [z_pcb_bot, z_pcb_top, z_plate_bot, z_plate_top, z_mcu_bot], pod = [pod_iw, pod_il, pod_ih],
-                           holes = holes, bay = bay, ctrl = ctrl_rect, mcu = mcu, battery_c = batt_cc, reset = reset_c, power = power_c, bumpons = bumpons, keys = keys, post = key_pcb_post, post_x = [key_pcb_post_x]);
+                           holes = holes, bay = bay, ctrl = ctrl_rect, mcu = mcu, battery_c = batt_cc, reset = reset_c, power = power_c, bumpons = bumpons, keys = keys, post = key_pcb_post, post_x = [key_pcb_post_x], pcb_posts = build == "pcb" ? pcb_posts : []);
   if (part == "assembly")             assembly();
   else if (part == "section")         projection(cut = true) rotate([-90, 0, 0]) rotate([0, 0, -90]) translate([-section_x, 0, 0]) assembly();
   else if (part == "case")            case_bottom();
