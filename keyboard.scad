@@ -332,9 +332,11 @@ lip_clearance = 0.2;
 /* [Cutouts] */
 // USB slot at the MCU's connector end: [width, height, z relative to the MCU board top]; open to the top
 usb_cutout = [12, 7, -1.5];
-// pcb build: also cut the plate's rim over the USB notch, the same width as the notch. The receptacle sits right
-// under that rim and a plug's overmold is taller than the notch, so a bridged rim hides the port; with the slot the
-// plate edge is open above it, like the wall. false = the plate bridges the notch
+// pcb build: also cut the plate's rim at the controller window's USB end, the full width of the window. The
+// receptacle sits right under that rim and a plug's overmold is taller than the wall notch, so a bridged rim hides
+// the port; and a slot only as wide as the notch left two stubs of rim over the board's corners, 1 mm past its end
+// on paper but scraping it in a print (the board can sit 0.5 mm closer to the wall in the stand-in's gap, the printed
+// edge comes in a few tenths). The wall's own notch below stays usb_cutout wide. false = the plate bridges the notch
 usb_plate_slot = true;
 // extra wall cutouts: [x, y, outward_normal_angle_deg, width, height, z_above_floor]
 extra_cutouts = [];
@@ -920,8 +922,8 @@ module plate_hull() difference() {
   if (build == "plate" && has_ctrl && reset_button) ctrl_cut(reset_c, reset_body, reset_legs, reset_recess);
   if (build == "plate" && has_ctrl && power_switch) ctrl_cut(power_c, power_body, power_legs, power_recess);
   for (h = holes) translate([h[0], h[1], z_plate_bot - 5]) cylinder(d = screw_d, h = plate_t + 10);
-  if (build == "pcb" && has_bay && usb_plate_slot && usb_cutout[0] > 0)   // open the rim over the USB notch (see usb_plate_slot)
-    wall_cut(usb[0], usb[1], mcu[2] + 90, usb_cutout[0], plate_t + lip_height + 2, z_plate_bot - lip_height - 1);
+  if (build == "pcb" && has_bay && usb_plate_slot && usb_cutout[0] > 0)   // open the rim across the window's USB end (see usb_plate_slot)
+    wall_cut(usb[0], usb[1], mcu[2] + 90, mcu_win[0], plate_t + lip_height + 2, z_plate_bot - lip_height - 1);
   if (cradle) {
     cradle_cuts();
     if (!mcu_flipped) wall_cutouts();   // unflipped only: the USB plug crosses the plate level
