@@ -280,11 +280,15 @@ edges and its COL pads at the centre of its top/bottom edges: row wires go strai
 column boundary pad-to-pad, column wires run down the board centre line between the pillar pairs —
 neither comes near a pillar. The only rule: never lay a wire along a board's top/bottom edge into a
 corner, because a wire on a pillar patch gets clamped in the 0.2 mm gap when the case closes.
-[`docs/wiring_guide.png`](docs/wiring_guide.png) shows the underside with pads, pillars and an
-example matrix whose every wire is clearance-checked against every pillar (`tools/wiring_guide.py`
-regenerates it, and each variant directory gets its own). Orient the boards with the ROW pads
-towards the neighbouring columns (the pillars are sized around that). The bundle to the controller
-runs on the floor between the pillar rows.
+[`docs/wiring_guide.png`](docs/wiring_guide.png) shows the underside: the inner wall and its bosses,
+the boards with their pads, the pillars, the matrix, and the nice!nano with every pin named. The
+matrix pins are read straight from the shield (`row-gpios` in `pacino.dtsi`, `col-gpios` in
+`pacino_left.overlay`), and each row and column chain gets its own thin wire to its pin, routed
+clear of pillars, bosses and wall (`tools/wiring_guide.py` regenerates it and checks every wire;
+each variant directory gets its own). Orient the boards with the ROW pads towards the neighbouring
+columns (the pillars are sized around that). The row wires leave the inner column straight into the
+bay; the column wires collect at the thumbs' COL pads (the bottom key's, for a column without a
+thumb), enter the bay beside the inner column's bottom corner and climb the far side of the nano.
 
 ![wiring guide](docs/wiring_guide.png)
 `key_pcbs = true` (default) also stops the ribs 0.3 mm above the boards' top face, since the boards
@@ -545,7 +549,7 @@ the reversible board puts the matrix on a different set of GPIOs on each half, s
 artifacts if you built the board. The pin lists are in
 [`pcb/README.md`](pcb/README.md) and `tools/pcb_gen.py` prints them.
 
-Electrical matrix (matches [`docs/wiring_guide.png`](docs/wiring_guide.png)) — 5 columns × 5 rows
+Electrical matrix ([`docs/wiring_guide.png`](docs/wiring_guide.png) draws it pin by pin) — 5 columns × 5 rows
 per half, diodes `col2row` (Amoeba-King: switch → diode → ROW pad):
 
 | matrix | wires to | nice!nano pin |

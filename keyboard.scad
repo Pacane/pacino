@@ -1079,7 +1079,7 @@ mirrored_for_side() {
     }
   }
   if (part == "info") echo(stack = [z_pcb_bot, z_pcb_top, z_plate_bot, z_plate_top, z_mcu_bot], pod = [pod_iw, pod_il, pod_ih],
-                           holes = holes, bay = bay, ctrl = ctrl_rect, mcu = mcu, battery_c = batt_cc, reset = reset_c, power = power_c, bumpons = bumpons, keys = keys, post = key_pcb_post, post_x = [key_pcb_post_x], pcb_posts = build == "pcb" ? pcb_posts : []);
+                           holes = holes, bay = bay, ctrl = ctrl_rect, mcu = mcu, battery_c = batt_cc, reset = reset_c, power = power_c, bumpons = bumpons, keys = keys, post = key_pcb_post, post_x = [key_pcb_post_x], pcb_posts = build == "pcb" ? pcb_posts : [], flipped = mcu_flipped, boss_d = boss_d);
   if (part == "assembly")             assembly();
   else if (part == "section")         projection(cut = true) rotate([-90, 0, 0]) rotate([0, 0, -90]) translate([-section_x, 0, 0]) assembly();
   else if (part == "case")            case_bottom();
