@@ -554,14 +554,14 @@ per half, diodes `col2row` (Amoeba-King: switch → diode → ROW pad):
 
 | matrix | wires to | nice!nano pin |
 |---|---|---|
-| row 0 / 1 / 2 | top / home / bottom key row | `pro_micro` 21 / 20 / 19 |
-| row 3 | the two extra keys | `pro_micro` 18 |
+| row 0 / 1 / 2 | top / home / bottom key row | `pro_micro` 20 / 19 / 18 |
+| row 3 | the two extra keys | `pro_micro` 16 |
 | row 4 | the three thumbs | `pro_micro` 10 |
 | col 0…4 | pinky → inner column (each column chain includes its extra key and thumb) | `pro_micro` 9 / 8 / 7 / 6 / 5 |
 
-Pins 1, 14, 15, 16 are left free on purpose: they are the nice!view's CS/MISO/SCK/MOSI, so the
-display variant is wiring + two uncommented lines in `build.yaml` + `CONFIG_ZMK_DISPLAY=y` in
-`config/pacino.conf`. Edit your keymap in `config/pacino.keymap`. The left half is the central
+Pins 1, 14 and 15 are left free (nice!view CS/MISO/SCK) -- but row 3 sits on 16, the nice!view's
+MOSI, so the display variant is: move row 3 to a free pin (21) in the dtsi and in the wiring, then
+two uncommented lines in `build.yaml` + `CONFIG_ZMK_DISPLAY=y` in `config/pacino.conf`. Edit your keymap in `config/pacino.keymap`. The left half is the central
 side. The shield covers the default 5-column + 2-extra layout; the 6-column or no-extra variants
 need a matching edit to the transform and one more column pin.
 

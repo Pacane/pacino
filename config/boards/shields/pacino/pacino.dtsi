@@ -8,7 +8,8 @@
  * This matches docs/wiring_guide.png: column wires chain each column top-to-bottom including its
  * extra key; the thumb row is its own chain hung on the three inner columns.
  *
- * Pins avoid pro_micro 1/14/15/16 so the nice!view (SPI + CS) can be added without rewiring.
+ * Pins avoid pro_micro 1/14/15 (nice!view SPI + CS) -- but row 3 sits on 16, the nice!view's
+ * MOSI, so a display build needs row 3 rewired to a free pin (21) first.
  * Amoeba-King boards put the diode between the switch and the ROW pad: diode-direction col2row.
  */
 
@@ -39,10 +40,10 @@ RC(2,0) RC(2,1) RC(2,2) RC(2,3) RC(2,4)      RC(2,5) RC(2,6) RC(2,7) RC(2,8) RC(
         wakeup-source;
 
         row-gpios
-            = <&pro_micro 21 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* row 0: top      */
-            , <&pro_micro 20 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* row 1: home     */
-            , <&pro_micro 19 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* row 2: bottom   */
-            , <&pro_micro 18 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* row 3: extras   */
+            = <&pro_micro 20 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* row 0: top      */
+            , <&pro_micro 19 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* row 1: home     */
+            , <&pro_micro 18 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* row 2: bottom   */
+            , <&pro_micro 16 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* row 3: extras   */
             , <&pro_micro 10 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* row 4: thumbs   */
             ;
     };
