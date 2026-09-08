@@ -331,8 +331,7 @@ combination (PLA is ~70 % stiffer than PETG).
 `part = "carry_tray"` is a two-tray case for the pair (`CARRY=1 ./build.sh`; the 2000 mAh
 no-display build's trays are ready-made in
 [`variants/5col_extra2_bat103450_nodisplay/`](variants/5col_extra2_bat103450_nodisplay/) as
-`carry_tray_{left,right}.3mf`; `CARRY=1 ./build.sh step` adds the STEP when FreeCAD is installed). Each
-half lies keys-up on its bumpons in a tray whose pocket
+`carry_tray_{left,right}` STEP + 3MF). Each half lies keys-up on its bumpons in a tray whose pocket
 follows its outline (`carry_clearance`, 0.75 mm), and the two trays then close on each other
 keycaps-inward, the right one flipped over onto the left like a book shutting — so there is no
 lid, each tray is the other's. Flipped that way the right tray (the model mirrored) lands back on

@@ -1044,14 +1044,12 @@ module pcb_test() difference() {
 // other keycaps-inward, the right tray flipped over onto the left about the inner edge.  Flipped that way the right
 // tray (the model mirrored) lands back on the model's own coordinates, so a feature at (x, y) on one tray meets the
 // same feature on the other: the magnets pair up, and the cable pocket and finger well each become one compartment.
-// Only the rabbet differs by side.  Built from squares, circles, extrusions and cones -- no hull or minkowski --
+// Only the rabbet differs by side.  Built from single-face 2D shapes, extrusions and cones -- no hull or minkowski --
 // so FreeCAD rebuilds it as B-rep for the STEP.
 
-module rrect(b, r) {   // rounded rectangle [x0, y0, x1, y1] from primitives
-  translate([b[0] + r, b[1]]) square([b[2] - b[0] - 2 * r, b[3] - b[1]]);
-  translate([b[0], b[1] + r]) square([b[2] - b[0], b[3] - b[1] - 2 * r]);
-  for (x = [b[0] + r, b[2] - r], y = [b[1] + r, b[3] - r]) translate([x, y]) circle(r = r);
-}
+// rounded rectangle [x0, y0, x1, y1]: one offset of one square, so FreeCAD sees a single face (a union of squares and
+// circles comes through its importer as a compound of split faces whose extrusions never fuse)
+module rrect(b, r) offset(r = r) translate([b[0] + r, b[1] + r]) square([b[2] - b[0] - 2 * r, b[3] - b[1] - 2 * r]);
 function box_in(b, d) = [b[0] + d, b[1] + d, b[2] - d, b[3] - d];
 
 // the pocket: the outline plus clearance with the cable pocket and finger well merged in; slivers of tray thinner
