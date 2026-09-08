@@ -42,7 +42,7 @@ mounting bosses live in the walls, not in the matrix, and there is ~3 mm under t
 A PCB-sandwich build is a switch away.
 
 ```
-keyboard.scad            the model — all parameters at the top, Customizer-friendly (parts: case, plate, section; bezel with nice_view)
+keyboard.scad            the model — all parameters at the top, Customizer-friendly (parts: case, plate, section; bezel with nice_view; carry_tray)
 layouts/cheapino.scad    generated from ../cheapino/pcb/cheapino.kicad_pcb  (exact positions, if you want them)
 layouts/badtemper.scad   generated from ../badtemper2/BadTemper.kicad_pcb
 tools/kicad_layout.py    KiCad .kicad_pcb -> layouts/*.scad  (switches, holes, MCU, Edge.Cuts polygon)
@@ -61,13 +61,14 @@ out/                     STEP / 3MF / STL / DXF / PNG — regenerate any time, n
 without the two extra keys, 902030 or 103450 battery, with or without nice!view — each as
 `case_*` / `plate_*` STEP + 3MF for both halves (plus a bezel for display versions) and previews.
 The index in [`variants/README.md`](variants/README.md) lists sizes; `./build_variants.sh`
-regenerates them all.
+regenerates them all. The [carry case](#carry-case) is there too, as `carry_tray_*`.
 
 ## Quick start
 
 ```sh
 ./build.sh            # everything: step, mesh, dxf, png  (~40 s)
 ./build.sh step       # just the STEP files
+CARRY=1 ./build.sh    # ... plus the carry case trays (CARRY=only: just those)
 SCAD_ARGS='-D battery=[34,50,10.5]' ./build.sh    # any parameter override, e.g. the 2000 mAh cell
 ```
 
@@ -79,7 +80,8 @@ Outputs per side: `case_*` and `plate_*` as `.step` (Fusion) and `.3mf` / `.stl`
 `*_2d_*.dxf` profiles for sketches, and `preview_*.png` (assembly, exploded, top, case, plate,
 both halves, section through the bay). `WITH_DISPLAY=1 ./build.sh` additionally builds the
 nice!view version (`case_display_*`, `plate_display_*`, `bezel_*`); in the Customizer that is the
-`nice_view` switch.
+`nice_view` switch. `CARRY=1 ./build.sh` adds the [carry case](#carry-case) trays (`carry_tray_*`,
+`preview_carry*.png`) and runs their fit check.
 
 ## The layout
 
@@ -254,7 +256,8 @@ rather self-tap). **M2 × 6 screws** go down through the plate into them — the
 the plate, like a tray-mount case (ultra-thin hex-socket heads are ideal).
 
 Hardware per half: 8 × M2×4×3.5 inserts, 8 × M2×6 screws, 8 × 10 mm bumpons
-(+ 2 × M2×4 self-tapping screws for the bezel if you build the display version).
+(+ 2 × M2×4 self-tapping screws for the bezel if you build the display version;
++ 4 × 6 × 3 mm disc magnets per carry tray).
 `variants/insert_test.3mf` (`part = "insert_test"`) is a two-minute test print — one boss as on the
 case and a scrap of plate with its screw hole — to try the insert and screw before printing a case.
 
@@ -317,10 +320,51 @@ combination (PLA is ~70 % stiffer than PETG).
   perimeter. The only overhangs are the cradle's far corner tabs, the roof pad over the board and
   the pocket floors (tiny, fine in PETG).
 - **Bezel** (if used): window side down.
+- **Carry trays:** floor down, as modelled. Nothing overhangs; the magnet holes and the rabbet are cut from the top.
 - PETG tolerances: pockets have 0.2–0.3 mm clearance, the plate lip 0.2 mm; if your printer runs
   tight, bump `mcu_clearance` / `ctrl_clearance` to 0.4 and `lip_clearance` to 0.3. The MCU cradle
   is deliberately an interference fit — tune `crush_rib` (0.6) rather than the clearances. Self-tapping M2
   into 1.7 mm holes is a good fit for PETG; heat-set inserts also work in the 5 mm bosses.
+
+### Carry case
+
+`part = "carry_tray"` is a two-tray case for the pair (`CARRY=1 ./build.sh`; the 2000 mAh
+no-display build's trays are ready-made in
+[`variants/5col_extra2_bat103450_nodisplay/`](variants/5col_extra2_bat103450_nodisplay/) as
+`carry_tray_{left,right}.3mf`; `CARRY=1 ./build.sh step` adds the STEP when FreeCAD is installed). Each
+half lies keys-up on its bumpons in a tray whose pocket
+follows its outline (`carry_clearance`, 0.75 mm), and the two trays then close on each other
+keycaps-inward, the right one flipped over onto the left like a book shutting — so there is no
+lid, each tray is the other's. Flipped that way the right tray (the model mirrored) lands back on
+the model's own coordinates, so whatever sits at (x, y) on one tray meets the same thing on the
+other; only the rabbet differs by side.
+
+![carry case, open](variants/5col_extra2_bat103450_nodisplay/preview_carry.png)
+
+*The pair laid out like an open book, left tray and right tray. Shut, it is 156 × 132 × 80 mm.*
+
+- **Rabbet.** The outer half of the left tray's rim steps up 1.2 mm, the inner half of the right's
+  (`carry_rabbet`, 0.2 mm lateral clearance), so the pair interlock and cannot slide on each other.
+- **Magnets.** Four 6 × 3 mm disc magnets per tray (`carry_magnet`; 6.3 mm holes, glue them in) in the
+  four places this outline leaves a magnet's worth of solid rim: over the ring column, at the bay's
+  top-right corner, under the index column and in the chamfer the fanned thumb cluster leaves.
+  `carry_pad` gives the pocket 4 mm at the top so the two top ones fit. Put the second tray's in the
+  other way up, so its faces meet the first's. `part = "carry_clash"` is empty when every magnet
+  has 1.2 mm of tray round it and the two trays shut without touching (`build.sh` checks).
+- **Cable pocket.** The corner the thumb cluster leaves empty under the pinky column is open to the
+  half's pocket (`carry_cable_pocket`, about 70 × 28 mm); shut, the two trays' pockets make one
+  75 mm-deep compartment for a cable and a dongle.
+- **Finger well.** A 23 × 20 mm well above the pinky column (`carry_finger_well`): pinch the half by
+  its pinky end — thumb in the well on the top edge, fingers in the cable pocket on the bottom
+  edge — and it tilts out.
+- **Size.** For this variant 156 × 132 mm, 40 mm per tray, 80 mm shut: the 18.5 mm case, 16 mm of
+  keycap (`carry_cap_h` — the model's caps reach 14.5, DSA / XDA / Cherry stay under 16, OEM row 1
+  needs 18.5, SA 20; measure yours, it is what sets the height), 2 mm of feet (`carry_feet`) and
+  1 mm of air (`carry_gap`), on a 2.5 mm floor inside 3 mm walls with 6 mm corners and a 1.5 mm
+  chamfer under. Both trays fit a 180 mm bed. The extents come from the layout (`outline_ext`, the
+  keys' and bay's hull the way `cavity_2d` builds it), so other variants get their own trays from
+  the same parameters; the magnet spots and the two pockets are placed for this outline, and
+  `carry_clash` says whether they still work.
 
 ### What sets the size
 

@@ -18,10 +18,13 @@ include <layouts/cheapino.scad>
 include <layouts/badtemper.scad>
 
 /* [Output] */
-part = "assembly"; // [assembly, section, case, plate, bezel, insert_test, pcb_test, clash, plate_2d, case_outline_2d, cavity_2d, pcb_2d, pcb_outline_2d, bezel_2d, info]
+part = "assembly"; // [assembly, section, case, plate, bezel, insert_test, pcb_test, clash, carry_tray, carry_open, carry_closed, carry_clash, plate_2d, case_outline_2d, cavity_2d, carry_pocket_2d, pcb_2d, pcb_outline_2d, bezel_2d, info]
 // part = "section": 2D cross-section of the assembly through the plane x = section_x (Y across, Z up)
 // part = "clash": the case intersected with the plate as assembled, plus (PCB build) the plate with the
 // controller -- empty when everything fits
+// part = "carry_tray": one tray of the carry case (see [Carry case]); carry_open / carry_closed show it with the
+// half in it, open (side = "both" lays the pair out like an open book) and shut; carry_clash is empty when the
+// magnets have plastic round them and the two trays shut without touching
 section_x = 123;
 side = "left"; // [left, right, both]
 // gap between the halves when side = "both"
@@ -343,11 +346,56 @@ extra_cutouts = [];
 // extra plate windows [cx, cy, w, h, rot]
 plate_windows = [];
 
+/* [Carry case] */
+// A two-tray carry case for the pair (part = "carry_tray", side = left / right). Each half lies keys-up in a tray
+// whose pocket follows its outline, and the two trays close on each other keycaps-inward, the right tray flipped
+// over onto the left like a book shutting -- so there is no lid, each tray is the other's. A rabbet round the rim
+// locates the pair (the outer half of the left tray's rim steps up, the inner half of the right's) and disc magnets
+// in the rim hold it shut. The half sits on its bumpons, carry_clearance round the case and carry_gap over the caps.
+carry_clearance = 0.75;
+// tallest keycap top above the plate top: the model's caps reach 14.5; DSA / XDA / Cherry stay under 16, OEM row 1
+// needs ~18.5, SA ~20 -- measure yours, this is what sets the case height
+carry_cap_h = 16;
+// how far the feet stand proud of the case underside (10 x 3 mm bumpons in the 1 mm recesses: 2)
+carry_feet = 2;
+// air over the caps in each tray (the two halves' caps end up twice this apart when shut)
+carry_gap = 1;
+carry_wall = 3;
+carry_floor = 2.5;
+// the tray is a rounded box: corner radius, and the chamfer on its bottom edge (0 = none)
+carry_r = 6;
+carry_chamfer = 1.5;
+// rabbet on the rim: [step height, lateral clearance]
+carry_rabbet = [1.2, 0.2];
+// pocket room beyond the outline on each side [left, bottom, right, top]. The 4 mm at the top is what makes room for
+// the two top magnets: the bay top and the ring column top are both less than a magnet's worth below the box edge
+carry_pad = [0, 0, 0, 4];
+// disc magnets in the rim face: [diameter, thickness] (6 x 3 mm discs; [0, 0] = none), the hole's clearance, how far
+// in from the box's outer faces they sit, and where ([] = auto: over the ring column, at the bay's top-right corner,
+// under the index column and in the thumb cluster's chamfer -- the four places this outline leaves a magnet's worth
+// of solid rim; carry_clash checks). Put the second tray's magnets in the other way up, so its faces meet the first's.
+carry_magnet = [6, 3];
+carry_magnet_clearance = 0.15;
+carry_magnet_inset = 6.5;
+carry_magnet_positions = [];
+// the corner the thumb cluster leaves empty under the pinky column becomes a cable pocket, open to the half's pocket:
+// [right edge x, top edge y] -- the top edge must lie inside the half's pocket where its left wall is straight, so the
+// two merge without a step.  [] = none
+carry_cable_pocket = [55, -5];
+// a finger well above the pinky column, so a half can be pinched top and bottom by its pinky end and tilted out:
+// [right edge x, bottom edge y] (the bottom edge inside the pocket, as above).  [] = none
+carry_finger_well = [8, 40];
+// tray material thinner than twice this between the pocket and the cable pocket / finger well is dropped, and the
+// pockets' square corners get this radius
+carry_fill = 2;
+
 /* [Hidden] */
 $fn = 64;
 eps = 0.01;
 // build.sh passes the Clipper-computed cavity outline back in here for the FreeCAD/STEP pass
 cavity_polygon = [];
+// likewise the carry tray's pocket outline
+carry_pocket_polygon = [];
 
 // ---------------------------------------------------------------- derived
 
@@ -569,6 +617,37 @@ if (cradle && z_mcu_top > z_plate_bot)
 x_extent = wall_e + (cavity_from == "pcb"
   ? max([for (p = pcb_outline) p[0]]) + pcb_gap
   : max(concat([for (k = keys) k[0] + px], has_bay ? [bay[0] + bay[2]] : [])) + key_margin);
+
+// the case outline's extents [x0, y0, x1, y1], worked out the way cavity_2d builds it: a rectangle grown by key_margin
+// and rounded by corner_r reaches exactly as far as its corners pulled in by corner_r, plus corner_r; the notch filling
+// and corner rounding never push a convex corner outward; the bay's corners are axis-aligned.  (The keys' hull, not
+// x_extent, which is a rough upper bound.)
+function rot2(p, a) = [p[0] * cos(a) - p[1] * sin(a), p[0] * sin(a) + p[1] * cos(a)];
+function rect_ext(c, size, a, m, r) = let(h = [size[0] / 2 + m - r, size[1] / 2 + m - r],
+    cs = [for (sx = [-1, 1], sy = [-1, 1]) [c[0], c[1]] + rot2([sx * h[0], sy * h[1]], a)])
+  [min([for (q = cs) q[0]]) - r, min([for (q = cs) q[1]]) - r, max([for (q = cs) q[0]]) + r, max([for (q = cs) q[1]]) + r];
+function ext_union(es) = [min([for (e = es) e[0]]), min([for (e = es) e[1]]), max([for (e = es) e[2]]), max([for (e = es) e[3]])];
+function rect_box(rr) = [rr[0], rr[1], rr[0] + rr[2], rr[1] + rr[3]];
+cavity_ext = cavity_from == "pcb"
+  ? ext_union([for (q = pcb_outline) [q[0], q[1], q[0], q[1]]]) + pcb_gap * [-1, -1, 1, 1]
+  : ext_union(concat(
+      [for (k = keys) rect_ext(k, [k[3] * px - (px - cap_w), cap_d], k[2], key_margin, corner_r)],
+      has_bay ? concat([rect_box(bay)], has_ctrl ? [rect_box(ctrl_rect)] : [])
+              : [rect_ext(mcu, [mcu[3], mcu[4]], mcu[2], key_margin, corner_r)]));
+outline_ext = cavity_ext + wall_e * [-1, -1, 1, 1];
+
+// carry case: the pocket's bounding box, the tray's, and the heights
+carry_pocket_box = outline_ext + carry_clearance * [-1, -1, 1, 1] + [-carry_pad[0], -carry_pad[1], carry_pad[2], carry_pad[3]];
+carry_box   = carry_pocket_box + carry_wall * [-1, -1, 1, 1];
+carry_rim_h = carry_feet + z_plate_top + carry_cap_h + carry_gap;   // floor top -> the plane the two trays meet on
+carry_h     = carry_floor + carry_rim_h;                              // that plane above the desk: the shut case is twice this
+carry_step  = carry_rabbet[0];
+carry_magnets = len(carry_magnet_positions) > 0 ? carry_magnet_positions : carry_magnet[0] <= 0 ? [] :
+  let(i = carry_magnet_inset) [
+    [px, carry_box[3] - i],                                  // over the ring column (the finger well takes the pinky's)
+    [carry_box[2] - i, carry_box[3] - i],                    // the bay's top-right corner
+    [3 * px + 6, carry_box[1] + i],                          // under the index column, beside the cable pocket
+    [carry_box[2] - i - 1.5, carry_box[1] + i + 1.5]];       // in the chamfer the fanned thumb cluster leaves
 
 // ---------------------------------------------------------------- 2D building blocks
 
@@ -959,6 +1038,89 @@ module pcb_test() difference() {
   }
 }
 
+// ---------------------------------------------------------------- carry case
+
+// Two trays, one per half, each following that half's outline; the halves lie keys-up and the trays close on each
+// other keycaps-inward, the right tray flipped over onto the left about the inner edge.  Flipped that way the right
+// tray (the model mirrored) lands back on the model's own coordinates, so a feature at (x, y) on one tray meets the
+// same feature on the other: the magnets pair up, and the cable pocket and finger well each become one compartment.
+// Only the rabbet differs by side.  Built from squares, circles, extrusions and cones -- no hull or minkowski --
+// so FreeCAD rebuilds it as B-rep for the STEP.
+
+module rrect(b, r) {   // rounded rectangle [x0, y0, x1, y1] from primitives
+  translate([b[0] + r, b[1]]) square([b[2] - b[0] - 2 * r, b[3] - b[1]]);
+  translate([b[0], b[1] + r]) square([b[2] - b[0], b[3] - b[1] - 2 * r]);
+  for (x = [b[0] + r, b[2] - r], y = [b[1] + r, b[3] - r]) translate([x, y]) circle(r = r);
+}
+function box_in(b, d) = [b[0] + d, b[1] + d, b[2] - d, b[3] - d];
+
+// the pocket: the outline plus clearance with the cable pocket and finger well merged in; slivers of tray thinner
+// than 2 x carry_fill between them are dropped (close), then the rectangles' corners rounded (open)
+module carry_pocket_2d() {
+  if (len(carry_pocket_polygon) > 2) polygon(carry_pocket_polygon);
+  else offset(r = carry_fill) offset(r = -2 * carry_fill) offset(r = carry_fill) union() {
+    offset(r = carry_clearance) outline_2d();
+    if (len(carry_cable_pocket) == 2) translate([carry_pocket_box[0], carry_pocket_box[1]])
+      square([carry_cable_pocket[0] - carry_pocket_box[0], carry_cable_pocket[1] - carry_pocket_box[1]]);
+    if (len(carry_finger_well) == 2) translate([carry_pocket_box[0], carry_finger_well[1]])
+      square([carry_finger_well[0] - carry_pocket_box[0], carry_pocket_box[3] - carry_finger_well[1]]);
+  }
+}
+
+// the chamfer band under the tray: the inset block, a wedge along each straight edge, a cone at each corner
+module carry_chamfer_band(b, r, c) {
+  linear_extrude(c + eps) rrect(box_in(b, c), r - c);
+  for (x = [b[0] + r, b[2] - r], y = [b[1] + r, b[3] - r]) translate([x, y, 0]) cylinder(r1 = r - c, r2 = r, h = c + eps);
+  module wedge(len) linear_extrude(len) polygon([[c, 0], [c, c + eps], [0, c + eps]]);   // (in from the outer face, z)
+  translate([b[0] + r, b[1], 0]) rotate([90, 0, 90]) wedge(b[2] - b[0] - 2 * r);                          // bottom
+  translate([b[0] + r, b[3], 0]) mirror([0, 1, 0]) rotate([90, 0, 90]) wedge(b[2] - b[0] - 2 * r);        // top
+  translate([b[0], b[1] + r, 0]) mirror([0, 1, 0]) rotate([90, 0, 0]) wedge(b[3] - b[1] - 2 * r);         // left
+  translate([b[2], b[1] + r, 0]) mirror([1, 0, 0]) mirror([0, 1, 0]) rotate([90, 0, 0]) wedge(b[3] - b[1] - 2 * r);   // right
+}
+
+// one tray. s = "left" / "right" (default: the half mirrored_for_side is placing, else `side`)
+module carry_tray(s = undef) {
+  right = (!is_undef(s) ? s : !is_undef($half) ? $half : side) == "right";
+  b = carry_box; r = carry_r; c = carry_chamfer;
+  step_in = carry_wall / 2 + (right ? 1 : -1) * carry_rabbet[1] / 2;   // the rabbet's step, in from the outer face
+  z_low = carry_h - carry_step / 2;                                    // the lowered half of the rim
+  z_top = carry_h + (right ? 1 : -1) * carry_step / 2;                 // the inner region's face, where the magnets sit
+  difference() {
+    union() {
+      translate([0, 0, c]) linear_extrude(z_low - c) rrect(b, r);
+      if (c > 0) carry_chamfer_band(b, r, c); else linear_extrude(c + eps) rrect(b, r);
+      // the rabbet: the outer band steps up on the left tray, everything inside it on the right, so the pair interlock
+      translate([0, 0, z_low - eps]) linear_extrude(carry_step + eps)
+        if (right) rrect(box_in(b, step_in), r - step_in);
+        else difference() { rrect(b, r); rrect(box_in(b, step_in), r - step_in); }
+    }
+    translate([0, 0, carry_floor]) linear_extrude(carry_rim_h + carry_step) carry_pocket_2d();
+    for (m = carry_magnets) translate([m[0], m[1], z_top - carry_magnet[1] - 0.1])
+      cylinder(d = carry_magnet[0] + 2 * carry_magnet_clearance, h = carry_magnet[1] + carry_step + 1);
+  }
+}
+
+// the right tray shut onto the left: flipped over about Y, so the model's mirror lands back on the model's coordinates
+module carry_shut_right() translate([0, 0, 2 * carry_h]) rotate([0, 180, 0]) mirror([1, 0, 0]) let($half = "right") children();
+
+module carry_open() {   // a tray with its half in it; side = "both" lays the pair out like an open book
+  color("burlywood") carry_tray();
+  translate([0, 0, carry_floor + carry_feet]) assembly();
+}
+module carry_closed() {
+  let($half = "left") carry_open();
+  carry_shut_right() carry_open();
+}
+// empty when it all fits: every magnet has 1.2 mm of tray round it (the pocket, cable pocket and finger well kept
+// off), and the two trays shut on each other without touching
+module carry_clash() {
+  intersection() {
+    translate([0, 0, carry_floor]) linear_extrude(carry_rim_h + carry_step) carry_pocket_2d();
+    for (m = carry_magnets) translate([m[0], m[1], 0]) cylinder(d = carry_magnet[0] + 2 * carry_magnet_clearance + 2.4, h = carry_h + carry_step + 1);
+  }
+  intersection() { carry_tray("left"); carry_shut_right() carry_tray(); }
+}
+
 // ---------------------------------------------------------------- visualisation only
 
 module keycap_3d(k) {
@@ -1053,13 +1215,13 @@ module assembly() {
 
 // ---------------------------------------------------------------- main
 
-module mirrored_for_side() {
-  if (side == "right") mirror([1, 0, 0]) children();
+module mirrored_for_side() {   // $half tells the children which half they are (side = "both" places both)
+  if (side == "right") mirror([1, 0, 0]) let($half = "right") children();
   else if (side == "both") {
-    translate([-x_extent - both_gap / 2, 0]) children();
-    translate([ x_extent + both_gap / 2, 0]) mirror([1, 0, 0]) children();
+    translate([-x_extent - both_gap / 2, 0]) let($half = "left") children();
+    translate([ x_extent + both_gap / 2, 0]) mirror([1, 0, 0]) let($half = "right") children();
   }
-  else children();
+  else let($half = "left") children();
 }
 
 mirrored_for_side() {
@@ -1079,7 +1241,8 @@ mirrored_for_side() {
     }
   }
   if (part == "info") echo(stack = [z_pcb_bot, z_pcb_top, z_plate_bot, z_plate_top, z_mcu_bot], pod = [pod_iw, pod_il, pod_ih],
-                           holes = holes, bay = bay, ctrl = ctrl_rect, mcu = mcu, battery_c = batt_cc, reset = reset_c, power = power_c, bumpons = bumpons, keys = keys, post = key_pcb_post, post_x = [key_pcb_post_x], pcb_posts = build == "pcb" ? pcb_posts : [], flipped = mcu_flipped, boss_d = boss_d);
+                           holes = holes, bay = bay, ctrl = ctrl_rect, mcu = mcu, battery_c = batt_cc, reset = reset_c, power = power_c, bumpons = bumpons, keys = keys, post = key_pcb_post, post_x = [key_pcb_post_x], pcb_posts = build == "pcb" ? pcb_posts : [], flipped = mcu_flipped, boss_d = boss_d,
+                           outline_ext = outline_ext, carry = [carry_box, carry_h, carry_magnets]);
   if (part == "assembly")             assembly();
   else if (part == "section")         projection(cut = true) rotate([-90, 0, 0]) rotate([0, 0, -90]) translate([-section_x, 0, 0]) assembly();
   else if (part == "case")            case_bottom();
@@ -1096,4 +1259,9 @@ mirrored_for_side() {
   }
   else if (part == "pcb_2d")          pcb_2d();
   else if (part == "pcb_outline_2d")  pcb_board_2d();   // Edge.Cuts for the Pacino PCB (build = "pcb")
+  else if (part == "carry_tray")      carry_tray();
+  else if (part == "carry_pocket_2d") carry_pocket_2d();
+  else if (part == "carry_open")      carry_open();
+  else if (part == "carry_closed")    carry_closed();
+  else if (part == "carry_clash")     carry_clash();
 }

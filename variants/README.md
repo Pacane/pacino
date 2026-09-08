@@ -3,7 +3,9 @@
 Every combination of the four options. Each directory has `case_{left,right}` and `plate_{left,right}`
 as **.step** (Fusion 360 / CAD) and **.3mf** (slicer), plus a bezel for the display versions, previews, and a
 `wiring_guide.png` showing the underside with the wall, the floor pillars, the matrix and every wire to its nice!nano pin, all clash-free.
-Print the plate top-side down, the case as-is; hardware and assembly notes are in the main README.
+`carry_tray_{left,right}` is the two-tray carry case for that variant (the trays shut on each other, keycaps inward;
+`preview_carry.png` shows the pair open) -- see the main README.
+Print the plate top-side down, the case as-is, the trays floor down; hardware and assembly notes are in the main README.
 
 | variant | columns | keys/half | battery | nice!view | half size (mm) | preview |
 |---|---|---|---|---|---|---|

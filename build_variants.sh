@@ -13,7 +13,9 @@ INDEX="$ROOT/README.md"
   echo "Every combination of the four options. Each directory has \`case_{left,right}\` and \`plate_{left,right}\`"
   echo "as **.step** (Fusion 360 / CAD) and **.3mf** (slicer), plus a bezel for the display versions, previews, and a"
   echo "\`wiring_guide.png\` showing the underside with the wall, the floor pillars, the matrix and every wire to its nice!nano pin, all clash-free."
-  echo "Print the plate top-side down, the case as-is; hardware and assembly notes are in the main README."
+  echo "\`carry_tray_{left,right}\` is the two-tray carry case for that variant (the trays shut on each other, keycaps inward;"
+  echo "\`preview_carry.png\` shows the pair open) -- see the main README."
+  echo "Print the plate top-side down, the case as-is, the trays floor down; hardware and assembly notes are in the main README."
   echo
   echo "| variant | columns | keys/half | battery | nice!view | half size (mm) | preview |"
   echo "|---|---|---|---|---|---|---|"
@@ -38,7 +40,7 @@ for cols in 5 6; do for extra in no yes; do for bat in 902030 103450; do for dis
   if [[ -z ${ONLY:-} || $name == *${ONLY}* ]]; then   # ONLY=substring rebuilds a subset; the index is always complete
     echo "=== $name"
     rm -rf "$ROOT/$name"; mkdir -p "$ROOT/$name"
-    OUT="$ROOT/$name" SCAD_ARGS="$args" STL=0 PREVIEWS=min BEZEL=$bezel ./build.sh step mesh png 2>&1 | grep -E "STEP|ERROR|fail|Exception" | sed 's/^/  /' || true
+    OUT="$ROOT/$name" SCAD_ARGS="$args" STL=0 PREVIEWS=min BEZEL=$bezel CARRY=1 ./build.sh step mesh png 2>&1 | grep -E "STEP|ERROR|fail|Exception" | sed 's/^/  /' || true
     rm -f "$ROOT/$name"/*.csg
     python3 tools/wiring_guide.py -o "$ROOT/$name" $args | sed 's/^/  /'
   fi
@@ -61,7 +63,7 @@ for slim in flat pod; do
   if [[ -z ${ONLY:-} || $name == *${ONLY}* ]]; then
     echo "=== $name"
     rm -rf "$ROOT/$name"; mkdir -p "$ROOT/$name"
-    OUT="$ROOT/$name" SCAD_ARGS="$args" STL=0 PREVIEWS=min ./build.sh step mesh png 2>&1 | grep -E "STEP|ERROR|fail|Exception" | sed 's/^/  /' || true
+    OUT="$ROOT/$name" SCAD_ARGS="$args" STL=0 PREVIEWS=min CARRY=1 ./build.sh step mesh png 2>&1 | grep -E "STEP|ERROR|fail|Exception" | sed 's/^/  /' || true
     rm -f "$ROOT/$name"/*.csg
     # a printable stand-in for the board, to test-fit the stack before ordering one
     "$OPENSCAD" --backend=Manifold -q -D 'part="pcb_test"' $args -o "$ROOT/$name/pcb_test.3mf" keyboard.scad
