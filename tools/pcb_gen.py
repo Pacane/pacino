@@ -24,6 +24,9 @@ paid for, is in three places --
   power      RAW and GND have no symmetric pair, so each gets a three-pad solder jumper: bridge the
              centre pad to L or R.  Reset needs no jumper -- it sits across the (rowA,3)/(rowB,3) pair,
              which is GND/RST one way round and RST/GND the other.
+  controller sits ON TOP of the board -- the face opposite the sockets and diodes -- component side
+             down, flush in the plate's window (that is what the case is built around).  Every
+             per-half pin table, and which face carries the L / R mark, is computed for that.
 """
 import math, os, re, subprocess, sys, heapq
 
@@ -366,7 +369,10 @@ PRO_MICRO = {1: "1/TX", 2: "0/RX", 3: "GND", 4: "GND", 5: "2", 6: "3", 7: "4", 8
 # BOTH halves.  That leaves exactly k = 5,6,7,8,12 on each row: ten holes for ten matrix nets.
 MCU_MATRIX = {5: "COL0", 6: "COL1", 7: "COL2", 8: "COL3", 12: "COL4",
               20: "ROW0", 19: "ROW1", 18: "ROW2", 17: "ROW3", 13: "ROW4"}
-MCU_POWER  = {3: "RST_A", 22: "RST_B", 24: "BAT_L", 1: "BAT_R", 4: "GND_L", 21: "GND_R"}
+# The controller sits on the face opposite the parts.  Left half: parts on B, nano on F, component
+# side towards the board -- seen from F that is the plain pinout, RAW on pad 1 and GND on pad 4.
+# Right half: parts on F, nano on B -- rows swapped, RAW on pad 24 and GND on pad 21.
+MCU_POWER  = {3: "RST_A", 22: "RST_B", 1: "BAT_L", 24: "BAT_R", 21: "GND_L", 4: "GND_R"}
 
 def mcu_pads(w, l):
     pads = []
@@ -725,9 +731,11 @@ def build():
                ((mcu[3] / 2, -mcu[4] / 2), (mcu[3] / 2, mcu[4] / 2), "F"),
                ((mcu[3] / 2, mcu[4] / 2), (-mcu[3] / 2, mcu[4] / 2), "F"),
                ((-mcu[3] / 2, mcu[4] / 2), (-mcu[3] / 2, -mcu[4] / 2), "F")])
+    # a 12 mm tactile links its two legs 12.5 mm apart (same y) inside the switch and closes between
+    # the 5 mm pairs -- so the same-y legs share a net, or the switch shorts RST to GND permanently
     g.fp("RSW1", "SW_Tactile_12mm", K(info["reset"]), 0,
-         [{"n": 1 if x < 0 else 2, "k": "PTH", "x": x, "y": y, "w": 1.6, "h": 1.6, "d": 0.95,
-           "net": "RST_A" if x < 0 else "RST_B"}
+         [{"n": 1 if y < 0 else 2, "k": "PTH", "x": x, "y": y, "w": 1.6, "h": 1.6, "d": 0.95,
+           "net": "RST_A" if y < 0 else "RST_B"}
           for x in (-6.25, 6.25) for y in (-2.5, 2.5)],
          (-7.15, -6.15, 7.15, 6.15))
     g.fp("PWR1", "SS12D00", K(info["power"]), 0,
@@ -738,7 +746,14 @@ def build():
     # the jumpers go just right of the slide switch, at the free right-hand end of the control
     # strip -- placed off the switch, not the controller, so they follow it when the bay is wider
     pw = K(info["power"])
-    jp1 = (pw[0] + 8.2, pw[1] - 1.8); jp2 = (pw[0] + 8.2, pw[1] + 2.7)
+    # stacked above the slide switch's line: the bay's corner boss (6 mm case boss / 5 mm plate
+    # spacer) sits ~5 mm below it, and a solder bridge under a boss keeps the case from closing
+    jp1 = (pw[0] + 8.2, pw[1] - 6.3); jp2 = (pw[0] + 8.2, pw[1] - 1.8)
+    for jp in (jp1, jp2):
+        for cx, cy, d in inner_holes:
+            if math.hypot(jp[0] - cx, jp[1] - cy) < 3.0 + 0.5 + 2.3:
+                sys.exit("jumper at (%.1f, %.1f) sits under the boss of the hole at (%.1f, %.1f)"
+                         % (jp[0], jp[1], cx, cy))
     bt1 = (mat[0], mat[1] + 18.5)   # under the plate's lead slot, clear of the controller
     g.fp("JP1", "BAT_SELECT", jp1, 0, jumper_pads("BAT_L", "BAT_SW", "BAT_R"), (-2.3, -1.3, 2.3, 1.3))
     g.fp("JP2", "GND_SELECT", jp2, 0, jumper_pads("GND_L", "GND", "GND_R"), (-2.3, -1.3, 2.3, 1.3))
@@ -754,8 +769,10 @@ def build():
     note((jp1[0], jp1[1] - 2.2), "BAT", 1.0)
     note((jp2[0], jp2[1] + 2.4), "GND", 1.0)
     for jp in (jp1, jp2):
-        note((jp[0] - 1.4, jp[1] - 1.5), "L", 0.9, face="B")     # left half solders on B
-        note((jp[0] + 1.4, jp[1] - 1.5), "R", 0.9, face="F")     # right half solders on F
+        # the letter goes on the face the controller sits on: the left half's nano is on F (its
+        # parts are on B), the right half's on B
+        note((jp[0] - 1.4, jp[1] - 1.5), "L", 0.9, face="F")
+        note((jp[0] + 1.4, jp[1] - 1.5), "R", 0.9, face="B")
     note((bt1[0] - 1.75, bt1[1] + 2.1), "+", 1.2)
     note((bt1[0] + 1.75, bt1[1] + 2.1), "-", 1.2)
     note((bt1[0] + 6.8, bt1[1] + 2.1), "BAT", 1.0)
@@ -938,13 +955,18 @@ PRO = '''{
 }
 '''
 
-NICE_VIEW = {"1", "14", "15", "16"}     # the display's CS / MISO / SCK / MOSI
+NICE_VIEW = {"1", "14", "15", "16"}     # kept free on both halves; note ZMK's stock nice!view
+                                        # adapter wants 1 / 2 / 3 (D1 + SDA/SCL) -- on this board a
+                                        # display needs its own nice_view_spi on the free 14/15/16
 
 def zmk_pins():
     """A matrix hole's pin depends on which way up the board is: the flip swaps the controller's two
-    pin rows (pad n <-> pad 25-n) but not the position along a row."""
-    left  = {n: PRO_MICRO[n] for n in MCU_MATRIX}
-    right = {n: PRO_MICRO[25 - n] for n in MCU_MATRIX}
+    pin rows (pad n <-> pad 25-n) but not the position along a row.  PRO_MICRO is the pinout seen
+    from F with the component side facing you; the controller sits on the face opposite the parts,
+    component side towards the board, so that is the RIGHT half (parts on F, nano on B) and the
+    left half is the swapped one."""
+    right = {n: PRO_MICRO[n] for n in MCU_MATRIX}
+    left  = {n: PRO_MICRO[25 - n] for n in MCU_MATRIX}
     bad = [(n, MCU_MATRIX[n], left[n], right[n]) for n in MCU_MATRIX
            if left[n] in NICE_VIEW or right[n] in NICE_VIEW or not left[n].isdigit()
            or not right[n].isdigit()]
@@ -1018,8 +1040,10 @@ sockets go in **rotated 180 degrees**; MX switches are square and their stems ar
 nothing about the feel, the keycaps or the plate changes. (Mirroring the pin pair instead, which is
 the obvious way to do it, puts two 3 mm holes 2.84 mm apart -- they would merge into a slot.)
 
-**Matrix.** Flipping the board swaps the controller's two pin rows but not the position along a row,
-so each hole is one pin on the left half and a different one on the right. The ten matrix holes were
+**Matrix.** The controller sits on the face *opposite* the sockets and diodes -- on top of the board,
+component side towards it, flush in the plate's window -- and flipping the board swaps its two pin
+rows but not the position along a row, so each hole is one pin on the left half and a different one
+on the right. The ten matrix holes were
 chosen so that *both* of their pins are usable GPIOs and neither is one of `pro_micro 1/14/15/16` --
 the nice!view's CS/MISO/SCK/MOSI stay free on both halves. The two halves therefore need different
 pin lists in ZMK -- which is why the slim build has its own shield, `pacino_pcb`, whose two overlays
@@ -1028,14 +1052,19 @@ differ from each other (the hand-wired `pacino` shield is unchanged and unrelate
 %(matrix)s
 
 **Power.** RAW and GND have no symmetric partner, so each gets a three-pad solder jumper: bridge the
-centre pad to the pad marked **L** or **R** for the half you are building (the mark is on the face
-you are soldering). Reset needs no jumper -- the switch sits across the `(rowA,3)`/`(rowB,3)` pair,
-which is GND/RST one way up and RST/GND the other.
+centre pad to the pad marked **L** or **R** for the half you are building. The mark is printed on
+the face the controller sits on (the face opposite the sockets), and that is the pad to bridge.
+Boards generated before September 2026 have the letters the other way round: on those, still bridge
+the marked pad on the controller's face, whatever letter it shows. Reset needs no jumper -- the
+switch sits across the `(rowA,3)`/`(rowB,3)` pair, which is GND/RST one way up and RST/GND the
+other; a 12 mm tactile links its two legs 12.5 mm apart internally, and the footprint puts those on
+one net (boards from before the same date have it the other way and short RST to GND: fit the
+switch by two diagonal legs only).
 
 | jumper | bridge to | left half | right half |
 |---|---|---|---|
-| `JP1` RAW | centre -> L or R | pad 24 = `RAW` | pad 1 = `RAW` |
-| `JP2` GND | centre -> L or R | pad 4 = `GND` | pad 21 = `GND` |
+| `JP1` RAW | centre -> L or R | pad 1 = `RAW` | pad 24 = `RAW` |
+| `JP2` GND | centre -> L or R | pad 21 = `GND` | pad 4 = `GND` |
 
 ## Assembly
 
@@ -1047,8 +1076,11 @@ which is GND/RST one way up and RST/GND the other.
    are drawn that way round, so follow them rather than the other side's.
 4. Reset and slide switch: through-hole, bodies on the *other* face -- they poke up through their
    windows in the plate.
-5. Sockets for the controller on the same face as everything else; the nice!nano goes in
-   **component side down**, USB towards the notch in the wall.
+5. Sockets for the controller on the **other** face -- the plate side, with the reset and slide
+   switch bodies. The nano sits on top of the board, **component side down** (towards the board:
+   its USB shell lives in the 3.5 mm socket gap), USB towards the notch in the wall, and finishes
+   flush in the plate's window. The nano's own B+ / B- pads stay empty; the battery reaches it
+   through RAW / GND.
 6. Bridge `JP1` and `JP2` to the pad marked for your half.
 7. %(leads)s
 
@@ -1162,10 +1194,12 @@ def main():
         if key not in VARIANTS: sys.exit("unknown variant %r (have: %s)" % (key, ", ".join(VARIANTS)))
         failed, left, right = one(key)
         bad += len(failed)
-    for half, pins in (("left ", left), ("right", right)):     # identical for both boards
+    # identical for both boards.  COL0 is the pinky column on both halves; the left overlay lists
+    # columns pinky-first, the right one inner-first (its transform runs col 5 = inner .. col 9)
+    for half, pins, cols in (("left ", left, (5, 6, 7, 8, 12)), ("right", right, (12, 8, 7, 6, 5))):
         print("  ZMK %s  row-gpios: %-18s col-gpios: %s"
               % (half, " ".join(pins[n] for n in (20, 19, 18, 17, 13)),
-                 " ".join(pins[n] for n in (5, 6, 7, 8, 12))))
+                 " ".join(pins[n] for n in cols)))
     return 1 if bad else 0
 
 if __name__ == "__main__":

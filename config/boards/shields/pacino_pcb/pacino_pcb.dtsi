@@ -5,9 +5,13 @@
  * The board is reversible: one design, flipped over for the right half.  Flipping swaps the
  * controller's two pin rows (a hole that is the left pin row on one half is the right pin row on
  * the other) without changing the position along a row, so every matrix net lands on a different
- * GPIO depending on which half you built.  The ten holes were picked so that both of each hole's
- * pins are usable and neither is pro_micro 1/14/15/16 -- the nice!view's CS/MISO/SCK/MOSI stay free
- * on BOTH halves.  tools/pcb_gen.py prints these two pin lists every time it builds the board.
+ * GPIO depending on which half you built.  The controller sits ON TOP of the board -- the face
+ * opposite the hot-swap sockets, component side towards the board, flush in the plate's window --
+ * and the two pin lists below are for that placement; tools/pcb_gen.py prints them every time it
+ * builds the board.  The ten holes were picked so that both of each hole's pins are usable GPIOs,
+ * keeping pro_micro 1/14/15/16 free on both halves.  Note ZMK's stock nice_view_adapter wants
+ * pins 1/2/3 and this board uses 2 and 3 for the matrix, so a display here needs its own
+ * nice_view_spi on 14/15/16 instead of the stock adapter.
  *
  * The hand-wired build keeps its own `pacino` shield; do not cross the two.
  */

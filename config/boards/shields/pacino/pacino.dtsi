@@ -8,8 +8,11 @@
  * This matches docs/wiring_guide.png: column wires chain each column top-to-bottom including its
  * extra key; the thumb row is its own chain hung on the three inner columns.
  *
- * Pins avoid pro_micro 1/14/15 (nice!view SPI + CS) -- but row 3 sits on 16, the nice!view's
- * MOSI, so a display build needs row 3 rewired to a free pin (21) first.
+ * nice!view: ZMK's stock nice_view_adapter puts it on pro_micro 1 (CS, P0.06), 2 (MOSI, P0.17)
+ * and 3 (SCK, P0.20) -- the nice!nano's D1 + the OLED header's SDA/SCL -- and the matrix uses
+ * none of those, so the display build is this same wiring plus "nice_view_adapter nice_view"
+ * on the shield.  (pro_micro 14/15/16 are the AVR pro micro's SPI pins; the nRF52840 puts SPI
+ * on any pin, so row 3 can stay on 16.)
  * Amoeba-King boards put the diode between the switch and the ROW pad: diode-direction col2row.
  */
 

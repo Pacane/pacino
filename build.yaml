@@ -5,7 +5,8 @@ include:
     shield: pacino_left
   - board: nice_nano//zmk
     shield: pacino_right
-  # nice!view display variant -- wire the display to pro_micro 1 (CS), 14 (MISO), 15 (SCK), 16 (MOSI):
+  # nice!view display variant -- five wires: VCC, GND, CS -> pro_micro 1, MOSI -> 2, SCK -> 3
+  # (the pins ZMK's nice_view_adapter expects; none of them are matrix pins on the hand-wired build):
   # - board: nice_nano//zmk
   #   shield: pacino_left nice_view_adapter nice_view
   # - board: nice_nano//zmk

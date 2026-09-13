@@ -18,7 +18,7 @@ every connection, and names the nets the way the ZMK shield names them.
 
 ![pacino_pod](pacino_pod_iso.png)
 
-20 keys, 39 nets, 513 tracks, 16 vias. Two layers, 1.6 mm, 0.3 mm tracks,
+20 keys, 39 nets, 580 tracks, 21 vias. Two layers, 1.6 mm, 0.3 mm tracks,
 0.2 mm clearance, 0.3 mm smallest drill -- inside every fab's cheapest process.
 
 ## One board, both halves
@@ -33,8 +33,10 @@ sockets go in **rotated 180 degrees**; MX switches are square and their stems ar
 nothing about the feel, the keycaps or the plate changes. (Mirroring the pin pair instead, which is
 the obvious way to do it, puts two 3 mm holes 2.84 mm apart -- they would merge into a slot.)
 
-**Matrix.** Flipping the board swaps the controller's two pin rows but not the position along a row,
-so each hole is one pin on the left half and a different one on the right. The ten matrix holes were
+**Matrix.** The controller sits on the face *opposite* the sockets and diodes -- on top of the board,
+component side towards it, flush in the plate's window -- and flipping the board swaps its two pin
+rows but not the position along a row, so each hole is one pin on the left half and a different one
+on the right. The ten matrix holes were
 chosen so that *both* of their pins are usable GPIOs and neither is one of `pro_micro 1/14/15/16` --
 the nice!view's CS/MISO/SCK/MOSI stay free on both halves. The two halves therefore need different
 pin lists in ZMK -- which is why the slim build has its own shield, `pacino_pcb`, whose two overlays
@@ -42,26 +44,31 @@ differ from each other (the hand-wired `pacino` shield is unchanged and unrelate
 
 | net | hole | left half | right half |
 |---|---|---|---|
-| `ROW0` | U1 pad 20 | `pro_micro 21` | `pro_micro 2` |
-| `ROW1` | U1 pad 19 | `pro_micro 20` | `pro_micro 3` |
-| `ROW2` | U1 pad 18 | `pro_micro 19` | `pro_micro 4` |
-| `ROW3` | U1 pad 17 | `pro_micro 18` | `pro_micro 5` |
-| `ROW4` | U1 pad 13 | `pro_micro 10` | `pro_micro 9` |
-| `COL0` | U1 pad 5 | `pro_micro 2` | `pro_micro 21` |
-| `COL1` | U1 pad 6 | `pro_micro 3` | `pro_micro 20` |
-| `COL2` | U1 pad 7 | `pro_micro 4` | `pro_micro 19` |
-| `COL3` | U1 pad 8 | `pro_micro 5` | `pro_micro 18` |
-| `COL4` | U1 pad 12 | `pro_micro 9` | `pro_micro 10` |
+| `ROW0` | U1 pad 20 | `pro_micro 2` | `pro_micro 21` |
+| `ROW1` | U1 pad 19 | `pro_micro 3` | `pro_micro 20` |
+| `ROW2` | U1 pad 18 | `pro_micro 4` | `pro_micro 19` |
+| `ROW3` | U1 pad 17 | `pro_micro 5` | `pro_micro 18` |
+| `ROW4` | U1 pad 13 | `pro_micro 9` | `pro_micro 10` |
+| `COL0` | U1 pad 5 | `pro_micro 21` | `pro_micro 2` |
+| `COL1` | U1 pad 6 | `pro_micro 20` | `pro_micro 3` |
+| `COL2` | U1 pad 7 | `pro_micro 19` | `pro_micro 4` |
+| `COL3` | U1 pad 8 | `pro_micro 18` | `pro_micro 5` |
+| `COL4` | U1 pad 12 | `pro_micro 10` | `pro_micro 9` |
 
 **Power.** RAW and GND have no symmetric partner, so each gets a three-pad solder jumper: bridge the
-centre pad to the pad marked **L** or **R** for the half you are building (the mark is on the face
-you are soldering). Reset needs no jumper -- the switch sits across the `(rowA,3)`/`(rowB,3)` pair,
-which is GND/RST one way up and RST/GND the other.
+centre pad to the pad marked **L** or **R** for the half you are building. The mark is printed on
+the face the controller sits on (the face opposite the sockets), and that is the pad to bridge.
+Boards generated before September 2026 have the letters the other way round: on those, still bridge
+the marked pad on the controller's face, whatever letter it shows. Reset needs no jumper -- the
+switch sits across the `(rowA,3)`/`(rowB,3)` pair, which is GND/RST one way up and RST/GND the
+other; a 12 mm tactile links its two legs 12.5 mm apart internally, and the footprint puts those on
+one net (boards from before the same date have it the other way and short RST to GND: fit the
+switch by two diagonal legs only).
 
 | jumper | bridge to | left half | right half |
 |---|---|---|---|
-| `JP1` RAW | centre -> L or R | pad 24 = `RAW` | pad 1 = `RAW` |
-| `JP2` GND | centre -> L or R | pad 4 = `GND` | pad 21 = `GND` |
+| `JP1` RAW | centre -> L or R | pad 1 = `RAW` | pad 24 = `RAW` |
+| `JP2` GND | centre -> L or R | pad 21 = `GND` | pad 4 = `GND` |
 
 ## Assembly
 
@@ -73,8 +80,11 @@ which is GND/RST one way up and RST/GND the other.
    are drawn that way round, so follow them rather than the other side's.
 4. Reset and slide switch: through-hole, bodies on the *other* face -- they poke up through their
    windows in the plate.
-5. Sockets for the controller on the same face as everything else; the nice!nano goes in
-   **component side down**, USB towards the notch in the wall.
+5. Sockets for the controller on the **other** face -- the plate side, with the reset and slide
+   switch bodies. The nano sits on top of the board, **component side down** (towards the board:
+   its USB shell lives in the 3.5 mm socket gap), USB towards the notch in the wall, and finishes
+   flush in the plate's window. The nano's own B+ / B- pads stay empty; the battery reaches it
+   through RAW / GND.
 6. Bridge `JP1` and `JP2` to the pad marked for your half.
 7. Battery leads to `BAT +` / `-`; they drop through the plate's controller window from the pod above.
 

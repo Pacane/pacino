@@ -1,8 +1,9 @@
 #include "pacino_pcb.dtsi"
 
 /*
- * The same board, flipped: every matrix hole is now on the controller's other pin row, so the row
- * and column pins are the mirror-image set of the left half's.
+ * Right half: sockets and diodes on the board's FRONT face, controller on the BACK (on top of the
+ * board, component side down) -- the mirror of the left half, so every hole is the other pin of
+ * its pair.  Bridge JP1 / JP2 to the pad marked R, on the face the nano sits on.
  */
 
 &default_transform {
@@ -11,17 +12,19 @@
 
 &kscan0 {
     row-gpios
-        = <&pro_micro 2 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>    /* row 0: top    */
-        , <&pro_micro 3 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>    /* row 1: home   */
-        , <&pro_micro 4 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>    /* row 2: bottom */
-        , <&pro_micro 5 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>    /* row 3: extras */
-        , <&pro_micro 9 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>    /* row 4: thumbs */
+        = <&pro_micro 21 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* row 0: top    */
+        , <&pro_micro 20 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* row 1: home   */
+        , <&pro_micro 19 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* row 2: bottom */
+        , <&pro_micro 18 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* row 3: extras */
+        , <&pro_micro 10 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>   /* row 4: thumbs */
         ;
+    /* the board's COL0 net is the pinky column on both halves; the transform wants the right
+     * half's columns inner-first, so this list runs COL4 .. COL0 */
     col-gpios
-        = <&pro_micro 10 GPIO_ACTIVE_HIGH>   /* col 5: inner  */
-        , <&pro_micro 18 GPIO_ACTIVE_HIGH>   /* col 6: index  */
-        , <&pro_micro 19 GPIO_ACTIVE_HIGH>   /* col 7: middle */
-        , <&pro_micro 20 GPIO_ACTIVE_HIGH>   /* col 8: ring   */
-        , <&pro_micro 21 GPIO_ACTIVE_HIGH>   /* col 9: pinky  */
+        = <&pro_micro 9 GPIO_ACTIVE_HIGH>    /* col 5: inner  (COL4) */
+        , <&pro_micro 5 GPIO_ACTIVE_HIGH>    /* col 6: index  (COL3) */
+        , <&pro_micro 4 GPIO_ACTIVE_HIGH>    /* col 7: middle (COL2) */
+        , <&pro_micro 3 GPIO_ACTIVE_HIGH>    /* col 8: ring   (COL1) */
+        , <&pro_micro 2 GPIO_ACTIVE_HIGH>    /* col 9: pinky  (COL0) */
         ;
 };

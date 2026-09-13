@@ -550,8 +550,13 @@ each board's `README.md` has the detail —
   go in rotated 180°, which an MX switch does not care about. (Mirroring the pin pair instead — the
   obvious way — puts two 3 mm holes 2.84 mm apart and they merge into a slot.)
 - **The matrix** lands on different GPIOs per half, because flipping swaps the controller's two pin
-  rows. The ten holes were chosen so both of each hole's pins are usable *and* `pro_micro 1/14/15/16`
-  stay free on both halves — the nice!view four. Hence a separate `pacino_pcb` ZMK shield.
+  rows. The ten holes were chosen so both of each hole's pins are usable GPIOs, keeping
+  `pro_micro 1/14/15/16` free on both halves. Hence a separate `pacino_pcb` ZMK shield. (ZMK's
+  stock nice!view adapter wants pins 1/2/3 — D1 plus the OLED header's SDA/SCL — and the PCB uses
+  2 and 3 for the matrix, so a display on the PCB needs its own `nice_view_spi` on the free
+  14/15/16.)
+- **The controller** sits on top of the board — the face opposite the sockets — component side
+  down, flush in the plate window; the pin lists and the **L**/**R** marks are worked out for that.
 - **Power** gets two three-pad solder jumpers (bridge to **L** or **R**). Reset needs none: it sits
   across a pin pair that is GND/RST one way up and RST/GND the other.
 
@@ -602,9 +607,12 @@ per half, diodes `col2row` (Amoeba-King: switch → diode → ROW pad):
 | row 4 | the three thumbs | `pro_micro` 10 |
 | col 0…4 | pinky → inner column (each column chain includes its extra key and thumb) | `pro_micro` 9 / 8 / 7 / 6 / 5 |
 
-Pins 1, 14 and 15 are left free (nice!view CS/MISO/SCK) -- but row 3 sits on 16, the nice!view's
-MOSI, so the display variant is: move row 3 to a free pin (21) in the dtsi and in the wiring, then
-two uncommented lines in `build.yaml` + `CONFIG_ZMK_DISPLAY=y` in `config/pacino.conf`. Edit your keymap in `config/pacino.keymap`. The left half is the central
+Pins 1, 2 and 3 are left free: that is where ZMK's stock `nice_view_adapter` puts the nice!view
+(CS on D1, MOSI and SCK on the OLED header's SDA/SCL, plus VCC and GND), so the display variant is
+this same wiring plus `nice_view_adapter nice_view` after the shield in `build.yaml` — no rewiring,
+and nothing to add to `config/pacino.conf` (the nice_view shield enables the display itself). Pins
+14/15/16 are the AVR pro micro's SPI pins; the nRF52840 puts SPI anywhere. Edit your keymap in
+`config/pacino.keymap`. The left half is the central
 side. The shield covers the default 5-column + 2-extra layout; the 6-column or no-extra variants
 need a matching edit to the transform and one more column pin.
 
