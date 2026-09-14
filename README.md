@@ -10,6 +10,8 @@ Named after (and descended from) the [cheapino](https://github.com/tompi/cheapin
 stagger and thumb-cluster geometry it borrows; hardware-wise it runs a nice!nano-compatible
 nRF52840, Kailh hot-swap sockets on Amoeba-King single-key PCBs, and ZMK.
 
+<img width="3206" height="2100" alt="file-23d378c498248af3c7d3fe0cd5108f69" src="https://github.com/user-attachments/assets/b90cf6f6-3959-4492-aaf6-86e0a90d7f5c" />
+
 ![Pacino — 5 columns + 2 extra keys, nice!view version](docs/pacino.png)
 
 *20 keys per half (40 total): 5 columns + 2 extra keys, with the nice!view display. 145 × 120 mm.*
