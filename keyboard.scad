@@ -318,6 +318,11 @@ boss_d = 6;
 // 3.3 for M2 x 4 x 3.5 brass heat-set inserts (M2 x 6 screws), 1.7 for self-tapping M2 screws
 boss_hole_d = 3.3;
 boss_hole_depth = 5;
+// counterbore at the mouth of every insert hole, so the insert seats this far below the boss face and the plastic
+// it displaces stays in the ring around it -- otherwise the flash stands proud and the plate (hand-wired build) or
+// the board (PCB build) cannot sit on the boss without trimming.  Depth 0 = none.
+boss_relief_d = 4.2;
+boss_relief_h = 0.6;
 // screw clearance hole through the plate
 screw_d = 2.3;
 // pcb build: spacer boss under the plate
@@ -816,6 +821,8 @@ module case_bottom() difference() {
     battery_fence();
   }
   for (h = holes) translate([h[0], h[1], boss_top - boss_hole_depth_e]) cylinder(d = boss_hole_d, h = boss_hole_depth_e + 1);
+  if (boss_relief_h > 0)
+    for (h = holes) translate([h[0], h[1], boss_top - boss_relief_h]) cylinder(d = boss_relief_d, h = boss_relief_h + 1);
   if (build == "pcb" && pcb_screw_channel > 0)   // screw channels up the inside of the wall over the holes
     for (h = holes) translate([h[0], h[1], boss_top]) cylinder(d = pcb_screw_channel, h = z_wall_top - boss_top + 1);
   wall_cutouts();
@@ -1232,6 +1239,8 @@ mirrored_for_side() {
         cylinder(d = boss_d, h = z_plate_bot);
       }
       translate([0, 0, z_plate_bot - boss_hole_depth]) cylinder(d = boss_hole_d, h = boss_hole_depth + 1);
+      if (boss_relief_h > 0)
+        translate([0, 0, z_plate_bot - boss_relief_h]) cylinder(d = boss_relief_d, h = boss_relief_h + 1);
     }
     translate([20, 0, 0]) difference() {
       translate([-8, -8, 0]) cube([16, 16, plate_t]);

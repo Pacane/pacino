@@ -251,7 +251,7 @@ The plate is the lid. The case walls end flush with the plate's underside, so th
 them all round; a 1 mm lip under the plate drops inside the walls (0.2 mm clearance) and locates it.
 Eight 6 mm bosses rise from the floor to the plate underside (six around the key block, two on
 the bay's right-hand corners, all half-buried in the wall so they don't intrude on the wiring), each with a
-3.3 mm × 5 mm hole for an **M2 × 4 × 3.5 brass heat-set insert** (`boss_hole_d = 1.7` if you'd
+3.3 mm × 5 mm hole, with a 4.2 mm × 0.6 mm counterbore at its mouth (`boss_relief_d` / `boss_relief_h`), for an **M2 × 4 × 3.5 brass heat-set insert** — press it down until it bottoms in the counterbore, so it and the plastic it displaces sit below the boss face and the plate seats without trimming (`boss_hole_d = 1.7` if you'd
 rather self-tap). **M2 × 6 screws** go down through the plate into them — the heads sit on top of
 the plate, like a tray-mount case (ultra-thin hex-socket heads are ideal).
 
@@ -451,7 +451,7 @@ stack is 2.5 floor + 2.4 (hot-swap sockets) + 1.6 board + 5.0 (MX plate-to-PCB, 
 switch), and there is nothing left to remove.
 
 Hardware for the slim build: the bosses stop at the board, so they are only 4.9 mm tall and their insert
-holes 4 mm deep with 0.9 mm of floor under them — use **M2 × 3 × 3.5 heat-set inserts** (the hand-wired case
+holes 4 mm deep with 0.9 mm of floor under them, the same 0.6 mm counterbore at the mouth — use **M2 × 3 × 3.5 heat-set inserts** (the hand-wired case
 takes 4 mm ones) and **M2 × 10 screws** (1.5 plate + 3.5 spacer + 1.6 board + 3 mm of thread). Five of the
 eight bosses sit on the wall line like the hand-wired ones, and since the wall keeps rising 5 mm past their
 tops, their insert holes would be tucked 1.2 mm under it — so a 4 mm channel (`pcb_screw_channel`) runs up
