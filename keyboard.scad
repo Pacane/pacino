@@ -112,9 +112,7 @@ pod_clearance = 0.4;
 
 /* [Case] */
 wall = 2.4;
-// pcb build: thicker, so the screw channels above the pillars (pcb_screw_channel) still leave 1.5 mm of wall
-pcb_wall = 3;
-wall_e = build == "pcb" ? pcb_wall : wall;
+// (the pcb build's wall is pcb_wall, under [Mounting]: it depends on the screw channel)
 // floor thickness (the bumpon recesses take bumpon_depth out of it)
 floor_t = 2.5;
 // keys = hull the keycaps (+ bay) with key_margin / corner_r;  pcb = follow the layout's Edge.Cuts + pcb_gap
@@ -319,25 +317,48 @@ key_pcb_post_gap = 0.2;
 rib_clearance = 0.3;
 
 /* [Mounting] */
-// case bosses: 6 mm leaves 1.35 mm of wall around a 3.5 mm OD heat-set insert
+// the plate screws and the case inserts.  Sets every size below it: the insert hole and its counterbore, the
+// plate's clearance hole, and in the pcb build the spacer boss, the wall channel, the wall and the board's holes.
+// M2: M2 x 4 x 3.5 brass heat-set inserts (x 3 in the pcb build), M2 x 6 screws (x 10 in the pcb build).
+// M3: 4.2 mm OD M3 inserts (3 mm long in the pcb build), M3 x 6 / x 10 screws, 1 mm of boss wall round the
+// insert.  A board made for M2 (2.2 mm holes) must have its holes drilled and its notches filed out to 3.4 mm
+// before M3 screws pass through it -- see the README for the one hole on the pcb builds that cannot be.
+screw_size = "M2"; // [M2, M3]
+// holes that stay M2 (insert hole, counterbore, plate hole, board hole) when screw_size is M3, as [x, y] within
+// 1 mm of a mounting hole: for an existing M2 board with a track too close to a hole to drill it out.  On the
+// pcb builds that is the top-edge hole, [[76.2, 57.1]].
+m2_holes = [];
+m3 = screw_size == "M3";
+// case bosses: 6 mm leaves 1.35 mm of wall around a 3.5 mm OD (M2) heat-set insert, 1 mm around a 4.2 mm (M3) one
 boss_d = 6;
-// 3.3 for M2 x 4 x 3.5 brass heat-set inserts (M2 x 6 screws), 1.7 for self-tapping M2 screws
-boss_hole_d = 3.3;
+// insert hole: 3.3 for M2 x 4 x 3.5 brass heat-set inserts, 4.0 for 4.2 mm OD M3 ones; 1.7 (M2) / 2.5 (M3) to self-tap
+boss_hole_d = m3 ? 4.0 : 3.3;
 boss_hole_depth = 5;
 // counterbore at the mouth of every insert hole, so the insert seats this far below the boss face and the plastic
 // it displaces stays in the ring around it -- otherwise the flash stands proud and the plate (hand-wired build) or
 // the board (PCB build) cannot sit on the boss without trimming.  Depth 0 = none.
-boss_relief_d = 4.2;
+boss_relief_d = m3 ? 5.0 : 4.2;
 boss_relief_h = 0.6;
 // screw clearance hole through the plate
-screw_d = 2.3;
+screw_d = m3 ? 3.4 : 2.3;
 // pcb build: spacer boss under the plate
-plate_boss_d = 5;
+plate_boss_d = m3 ? 6 : 5;
 // pcb build: the pillars stop at the board while the wall keeps rising past them, and the pillars on the wall
 // line have their insert holes reaching 1.2 mm under it -- so a channel this wide runs up the inside of the wall
-// over every hole, from the pillar top to the wall top, and the insert (3.5 OD) and screw drop straight in.
+// over every hole, from the pillar top to the wall top, and the insert (3.5 / 4.2 OD) and screw drop straight in.
 // 0 = none (then only the pillars standing clear of the wall can take an insert)
-pcb_screw_channel = 4;
+pcb_screw_channel = m3 ? 4.6 : 4;
+// pcb build: the wall, thicker than the hand-wired one so the screw channel still leaves 1.5 mm behind it
+pcb_wall = m3 ? 3.6 : 3;
+wall_e = build == "pcb" ? pcb_wall : wall;
+// pcb build: the board's screw holes (the wall-line ones come out as notches in its edge)
+pcb_hole_d = m3 ? 3.4 : 2.2;
+// per hole, honouring m2_holes
+function hole_m2(h) = m3 && len([for (m = m2_holes) if (norm([h[0] - m[0], h[1] - m[1]]) < 1) 1]) > 0;
+function hole_insert_d(h) = hole_m2(h) ? 3.3 : boss_hole_d;
+function hole_relief_d(h) = hole_m2(h) ? 4.2 : boss_relief_d;
+function hole_screw_d(h)  = hole_m2(h) ? 2.3 : screw_d;
+function hole_pcb_d(h)    = hole_m2(h) ? 2.2 : pcb_hole_d;
 // locating lip under the plate (height, width); 0 = none
 lip_h = 1;
 lip_w = 1.2;
@@ -627,7 +648,7 @@ module battery_2d(o = 0) translate(batt_cc) rect(battery[0] + 2 * o, battery[1] 
 
 module pcb_2d() difference() {
   polygon(pcb_outline);
-  for (h = holes) translate(h) circle(d = 2.2);
+  for (h = holes) translate(h) circle(d = hole_pcb_d(h));
 }
 
 // the board for build = "pcb": the cavity less pcb_gap, the M2 clearances (the bosses' screws pass
@@ -640,7 +661,7 @@ module pcb_board_2d() difference() {
   // the board only needs a cutout if the cell actually pokes up through it: true for a thick cell in
   // the floor, false for the plate pod and false for a thin one that fits under the board
   if (batt_thru) battery_2d(1);
-  for (h = holes) translate(h) circle(d = 2.2);
+  for (h = holes) translate(h) circle(d = hole_pcb_d(h));
 }
 
 // inner wall surface
@@ -687,7 +708,7 @@ module plate_windows_2d() {
 module plate_2d() difference() {
   outline_2d();
   for (k = keys) at(k) switch_cutout_2d();
-  for (h = holes) translate(h) circle(d = screw_d);
+  for (h = holes) translate(h) circle(d = hole_screw_d(h));
   if (len(plate_windows) > 0 || build == "pcb") plate_windows_2d();   // (guarded: an empty operand breaks FreeCAD)
   if (cradle && !mcu_flipped) cradle_opening_2d();
 }
@@ -724,7 +745,7 @@ if (build == "pcb") for (p = pcb_posts, i = [0 : len(keys) - 1]) if (post_hits(p
 boss_top_e = build == "pcb" ? z_pcb_bot : z_plate_bot;
 boss_hole_depth_e = min(boss_hole_depth, boss_top_e - 0.9);
 if (boss_hole_depth_e < boss_hole_depth)
-  echo(str("NOTE: boss holes are ", boss_hole_depth_e, " mm deep (", boss_top_e, " mm bosses, 0.9 mm of floor kept) -- use inserts no longer than that (M2 x 3)"));
+  echo(str("NOTE: boss holes are ", boss_hole_depth_e, " mm deep (", boss_top_e, " mm bosses, 0.9 mm of floor kept) -- use inserts no longer than that (", screw_size, " x 3)"));
 
 module battery_fence() if (has_bay && !has_pod && battery_fence[0] > 0 && battery_well_floor == 0)
   translate([0, 0, floor_t - eps]) linear_extrude(battery_fence[0] + eps) difference() {
@@ -770,9 +791,9 @@ module case_bottom() difference() {
     for (h = holes) translate([h[0], h[1], 0]) cylinder(d = boss_d, h = boss_top);
     battery_fence();
   }
-  for (h = holes) translate([h[0], h[1], boss_top - boss_hole_depth_e]) cylinder(d = boss_hole_d, h = boss_hole_depth_e + 1);
+  for (h = holes) translate([h[0], h[1], boss_top - boss_hole_depth_e]) cylinder(d = hole_insert_d(h), h = boss_hole_depth_e + 1);
   if (boss_relief_h > 0)
-    for (h = holes) translate([h[0], h[1], boss_top - boss_relief_h]) cylinder(d = boss_relief_d, h = boss_relief_h + 1);
+    for (h = holes) translate([h[0], h[1], boss_top - boss_relief_h]) cylinder(d = hole_relief_d(h), h = boss_relief_h + 1);
   if (build == "pcb" && pcb_screw_channel > 0)   // screw channels up the inside of the wall over the holes
     for (h = holes) translate([h[0], h[1], boss_top]) cylinder(d = pcb_screw_channel, h = z_wall_top - boss_top + 1);
   wall_cutouts();
@@ -961,7 +982,7 @@ module plate_hull() difference() {
   if (has_nv) nv_cuts();
   if (build == "plate" && has_ctrl && reset_button) ctrl_cut(reset_c, reset_body, reset_legs, reset_recess);
   if (build == "plate" && has_ctrl && power_switch) ctrl_cut(power_c, power_body, power_legs, power_recess);
-  for (h = holes) translate([h[0], h[1], z_plate_bot - 5]) cylinder(d = screw_d, h = plate_t + 10);
+  for (h = holes) translate([h[0], h[1], z_plate_bot - 5]) cylinder(d = hole_screw_d(h), h = plate_t + 10);
   if (build == "pcb" && has_bay && usb_plate_slot && usb_cutout[0] > 0)   // open the rim across the window's USB end (see usb_plate_slot)
     wall_cut(usb[0], usb[1], mcu[2] + 90, mcu_win[0], plate_t + lip_height + 2, z_plate_bot - lip_height - 1);
   if (cradle) {
@@ -1104,7 +1125,7 @@ module mirrored_for_side() {   // $half tells the children which half they are (
 
 mirrored_for_side() {
   // test coupon for the hardware: a boss exactly like the case's (insert hole) on a floor slab, plus a scrap of plate
-  // with its screw hole and lip relief, to try the heat-set insert and the M2 screw before printing everything
+  // with its screw hole and lip relief, to try the heat-set insert and the screw before printing everything
   if (part == "insert_test") {
     difference() {
       union() {

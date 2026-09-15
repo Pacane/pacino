@@ -265,6 +265,13 @@ Hardware per half: 8 × M2×4×3.5 inserts, 8 × M2×6 screws, 8 × 10 mm bumpon
 `variants/insert_test.3mf` (`part = "insert_test"`) is a two-minute test print — one boss as on the
 case and a scrap of plate with its screw hole — to try the insert and screw before printing a case.
 
+**M3 instead:** `screw_size = "M3"` resizes everything at once — 4.0 mm insert holes for the common
+4.2 mm OD M3 inserts with a 5 mm counterbore, 3.4 mm clearance holes in the plate, and in the slim build a
+6 mm spacer boss, a 4.6 mm wall channel, a 3.6 mm wall and 3.4 mm board holes. Hardware is then
+8 × M3 inserts (4 mm long here, 3 mm in the slim build) and 8 × M3×6 (M3×10 slim) screws; an M3 socket
+head is 5.5 mm across, so use low-profile ones. The 6 mm bosses keep 1 mm of wall around the insert —
+fine for the five buried in the wall, set the three free-standing ones carefully. The bezel stays M2.
+
 ### Hot-swap with single-key PCBs
 
 Per-key hot-swap PCBs (amoeba style) work as-is: the Kailh socket and the diode go on the underside
@@ -371,7 +378,8 @@ cluster, not a different battery.
 
 - `build = "plate"` (default, hand-wired): switches clip into the 1.5 mm plate, 6 mm bosses run
   from the floor to the plate underside with 3.3 mm holes for M2×4×3.5 heat-set inserts
-  (`boss_hole_d = 1.7` for self-tappers); M2×6 screws through the plate. `cavity_depth = 10`
+  (`boss_hole_d = 1.7` for self-tappers); M2×6 screws through the plate (`screw_size = "M3"` for
+  M3 inserts and screws throughout). `cavity_depth = 10`
   leaves room for MX bodies + pins + wiring and the battery/cradle stack.
 - `build = "pcb"`: PCB sandwich, and the slimmest build at **11.5 mm**. Bosses stop at the PCB
   underside, the plate gets spacer bosses down to the PCB, MX plate-to-PCB spacing is automatic
@@ -421,12 +429,23 @@ takes 4 mm ones) and **M2 × 10 screws** (1.5 plate + 3.5 spacer + 1.6 board + 3
 eight bosses sit on the wall line like the hand-wired ones, and since the wall keeps rising 5 mm past their
 tops, their insert holes would be tucked 1.2 mm under it — so a 4 mm channel (`pcb_screw_channel`) runs up
 the inside of the wall over each hole, the insert and screw drop straight in, and the slim case's wall is
-3 mm (`pcb_wall`) to keep 1.5 mm behind the channel. The other three (thumb end, the bay's bottom corner, and
+3 mm (`pcb_wall`) to keep 1.5 mm behind the channel (`screw_size = "M3"`: 4.6 mm channel, 3.6 mm wall, 3.4 mm
+board holes, 6 mm spacer bosses — see [How the plate attaches](#how-the-plate-attaches)). The other three (thumb end, the bay's bottom corner, and
 the one by the thumb keys) stand 2.5–3 mm clear of the wall as full round bosses; the board gets three real
 mounting holes there and five edge notches at the wall-line ones. Two 3 mm floor pillars (`pcb_posts`)
 stand under the board between the bosses, in the column gaps clear of the sockets, switch pins and diodes,
 so a 55 mm span of board is not hanging on its corners; the model warns if one is moved onto a socket, and
 the board generator keeps diodes off them.
+
+Going to M3 with a board that was made for M2 (2.2 mm holes): the screws only have to pass *through* the board,
+so drill its three real holes and file its five edge notches out to 3.4 mm rather than ordering a new one. Seven
+of the eight have no copper within 3.15 mm of the hole centre (only the ground pour, which any drill over 2.7 mm
+exposes on the hole wall — harmless, the screw lands in a brass insert in plastic). The top-edge hole between the
+middle and ring columns, at (76.2, 57.1), is the exception: the column-0 bus runs 1.45 mm from its centre on the
+back, so a 3.2 mm drill would cut it. Leave that one M2 with `m2_holes = [[76.2, 57.1]]` (its insert hole,
+counterbore, plate hole and board notch stay M2-sized) or leave it unscrewed — the plate rests on the wall all
+round. A board generated with `screw_size = "M3"` (`tools/pcb_gen.py -D 'screw_size="M3"'`) has 3.4 mm holes
+from the start.
 
 What sets it is where the cell goes, because **below the board every millimetre of battery is a
 millimetre of case**. Above it, the 3.5 mm the MX geometry hands you is free — the socketed
