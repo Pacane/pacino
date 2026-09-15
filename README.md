@@ -250,6 +250,14 @@ surface — if you want it flush, sand the pocket and glue the ring in (CA or ep
 clear of the battery well, since the two cut the floor from opposite sides and would leave 0.2 mm where they
 overlap (the model warns; the groove leaves 1 mm and may cross it). `out/preview_bottom.png` shows them all.
 
+`"embedded"` prints the ring **in**: an annular pocket for it, 0.2 mm taller than the ring, behind 0.4 mm of
+floor on the underside (`magsafe_ring_id`, `magsafe_ring_t`, `magsafe_skin`; measure your ring — a 56 mm sticker
+ring is about 45 mm inside and 0.5–0.7 mm thick). Add a pause in the slicer after the layer that finishes the
+pocket's walls (the model prints the height: z = 1.2 mm with the defaults), drop the ring in with its exposed
+face **down** and the adhesive up — the layer bridging over it sticks to the adhesive — and resume. No support:
+the ring carries the bridge, and nothing else on the case needs any. It uses 1.2 mm of the 2.5 mm floor, so it
+works in the slim build too, and cannot come off. Being steel, the ring has no polarity to get wrong.
+
 ### How the plate attaches
 
 The plate is the lid. The case walls end flush with the plate's underside, so the plate rests on
@@ -324,7 +332,8 @@ combination (PLA is ~70 % stiffer than PETG).
 ### Printing (PETG)
 
 - **Case:** prints as-is, bosses up. The MagSafe ring goes on afterwards, straight onto the bed-side
-  surface inside its groove (see [Bumpons](#bumpons)). Nothing overhangs except the open-top USB slot (bridged by the
+  surface inside its groove — or, with `magsafe_style = "embedded"`, into its pocket at the print pause
+  (see [Bumpons](#bumpons)). Nothing overhangs except the open-top USB slot (bridged by the
   plate, so it can stay open) and the 1 mm bumpon recesses on the first layer.
 - **Plate:** print top-side down. The cradle, the switch pockets (and the display ring and bezel
   bosses, if enabled) then point up and need no support; the keycap side gets the smooth first
