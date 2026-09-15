@@ -240,10 +240,15 @@ the bay's *left* wall (which doubles as the well's side) instead of 5 mm from it
 right-hand corners clear, and the bay is sized so the top-right foot always fits beside the cell with
 a millimetre of wall outside its recess. Each bay foot then moves outward only by what its well
 forces — a couple of millimetres — and the model warns if one has nowhere to go. The wider cells pay
-for it in width: the 103450's bay is 45 mm instead of 44, and its case 148 mm. A 56.6 mm × 1 mm disc recess for a MagSafe
-magnet ring sits under the index column (`magsafe_d`, `magsafe_pos`; 0 = none) — kept clear of the battery well,
-since the two cut the floor from opposite sides and would leave 0.2 mm where they overlap (the model warns).
-`out/preview_bottom.png` shows them all.
+for it in width: the 103450's bay is 45 mm instead of 44, and its case 148 mm. A 56 mm MagSafe magnet ring (the
+self-adhesive kind) goes under the index column (`magsafe_d`, `magsafe_pos`; 0 = none). By default it sticks
+straight onto the underside inside a one-layer locating groove (`magsafe_style = "groove"`, 0.6 mm wide and 0.2 mm
+deep, 0.3 mm outside the ring's edge): the underside is the first layer off the build plate and the ring's adhesive
+holds on to that surface, as it does on any PETG print. The alternative `"recess"` sinks the ring 1 mm into the
+floor (`magsafe_depth`), but that pocket prints on support and the adhesive does *not* hold on a support-interface
+surface — if you want it flush, sand the pocket and glue the ring in (CA or epoxy). The recess also has to stay
+clear of the battery well, since the two cut the floor from opposite sides and would leave 0.2 mm where they
+overlap (the model warns; the groove leaves 1 mm and may cross it). `out/preview_bottom.png` shows them all.
 
 ### How the plate attaches
 
@@ -311,7 +316,8 @@ combination (PLA is ~70 % stiffer than PETG).
 
 ### Printing (PETG)
 
-- **Case:** prints as-is, bosses up. Nothing overhangs except the open-top USB slot (bridged by the
+- **Case:** prints as-is, bosses up. The MagSafe ring goes on afterwards, straight onto the bed-side
+  surface inside its groove (see [Bumpons](#bumpons)). Nothing overhangs except the open-top USB slot (bridged by the
   plate, so it can stay open) and the 1 mm bumpon recesses on the first layer.
 - **Plate:** print top-side down. The cradle, the switch pockets (and the display ring and bezel
   bosses, if enabled) then point up and need no support; the keycap side gets the smooth first

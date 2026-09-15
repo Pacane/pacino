@@ -216,13 +216,22 @@ bumpon_positions = [[38.1, 58], [15, 20], [71.5, -15.5], [111.7, -31.7]];
 // floor left between the bay's top-right recess and the outside of the wall. 1.0 is the minimum (a 1 x 1 mm
 // lip at the case's bottom edge); with a wide cell every extra millimetre here is a millimetre of case width
 bumpon_skin = 1.0;
-// round recess in the underside for a MagSafe magnet ring (56 mm sticker ring); 0 = none
+// MagSafe magnet ring (56 mm sticker ring) on the underside; 0 = none
 magsafe_d = 56;
+// how it is located.  "groove": the ring sticks straight onto the underside -- the first layer off the build plate,
+// which its adhesive holds on to -- inside a one-layer locating groove (magsafe_groove_w wide, magsafe_groove_depth
+// deep) just outside its edge; the second layer bridges 0.6 mm, so the surface inside stays first layer.
+// "recess": sunk magsafe_depth into the underside.  That pocket prints on support and the sticker's adhesive will
+// NOT hold on a support-interface surface (it does on the bed-side surface): sand the pocket and glue the ring in.
+magsafe_style = "groove"; // [groove, recess]
 magsafe_depth = 1;
 magsafe_clearance = 0.3;
+magsafe_groove_w = 0.6;
+magsafe_groove_depth = 0.2;
 // centre: under the index column, clear of the bumpons and bosses -- and of the battery well, whose key-side
 // edge is on the bay line (x = 86.5): the recess is 1 mm into the underside and the well 1.3 mm into the top of the
-// floor, so where they overlap only 0.2 mm is left (the model warns).  [60, 28] ran 1.8 mm under the well.
+// floor, so where they overlap only 0.2 mm is left (the model warns; the 0.2 mm groove leaves 1 mm and may cross the
+// well).  [60, 28] ran 1.8 mm under the well.
 magsafe_pos = [57, 28];
 
 /* [Reset + power] */
@@ -476,15 +485,17 @@ if (has_bay && len(bay_foot_bot) == 0)
   echo("WARNING: no room for the bay's lower bumpon between the battery well and the wall -- add a control strip or a taller bay");
 if (has_bay && top_x + bumpon_r > bay_right + wall_e - bumpon_skin + 0.01)
   echo("WARNING: the bay's top-right bumpon would break through the wall -- widen the bay (bay_size_override)");
-// the MagSafe recess (magsafe_depth into the underside) must stay clear of the well (floor_t - battery_well_floor into
-// the top of the floor): where the two overlap only battery_well_floor - magsafe_depth of plastic is left
+// the MagSafe recess or groove (magsafe_depth_e into the underside) must leave floor under the well (floor_t -
+// battery_well_floor into the top of the floor): where the two overlap only battery_well_floor - magsafe_depth_e is left
 well_left = batt_c[0] - battery[0] / 2 - well_clearance;
-magsafe_r = magsafe_d / 2 + magsafe_clearance;
+magsafe_groove = magsafe_style == "groove";
+magsafe_depth_e = magsafe_groove ? magsafe_groove_depth : magsafe_depth;
+magsafe_r = magsafe_d / 2 + magsafe_clearance + (magsafe_groove ? magsafe_groove_w : 0);   // outer radius of the cut
 magsafe_well_gap = norm([magsafe_pos[0] - max(well_left, min(well_right, magsafe_pos[0])),
                          magsafe_pos[1] - max(well_bottom, min(well_top, magsafe_pos[1]))]) - magsafe_r;
-if (well_on && magsafe_d > 0 && magsafe_well_gap < 0)
-  echo(str("WARNING: the MagSafe recess runs ", -magsafe_well_gap, " mm under the battery well, leaving ",
-           battery_well_floor - magsafe_depth, " mm of floor there -- move magsafe_pos"));
+if (well_on && magsafe_d > 0 && magsafe_well_gap < 0 && battery_well_floor - magsafe_depth_e < 0.8)
+  echo(str("WARNING: the MagSafe ", magsafe_style, " runs ", -magsafe_well_gap, " mm under the battery well, leaving ",
+           battery_well_floor - magsafe_depth_e, " mm of floor there -- move magsafe_pos"));
 bumpons = concat([[x_left - 4, -4], [x_left - 4, 42]], bumpon_positions,
                  has_bay ? concat([bay_foot_top], bay_foot_bot) : []);
 
@@ -766,7 +777,11 @@ module case_bottom() difference() {
     for (h = holes) translate([h[0], h[1], boss_top]) cylinder(d = pcb_screw_channel, h = z_wall_top - boss_top + 1);
   wall_cutouts();
   if (bumpon_d > 0) for (b = bumpons) translate([b[0], b[1], -1]) cylinder(d = bumpon_d + 2 * bumpon_clearance, h = bumpon_depth + 1);
-  if (magsafe_d > 0) translate([magsafe_pos[0], magsafe_pos[1], -1]) cylinder(d = magsafe_d + 2 * magsafe_clearance, h = magsafe_depth + 1, $fn = 128);
+  if (magsafe_d > 0) translate([magsafe_pos[0], magsafe_pos[1], -1])   // ring recess, or the locating groove round it
+    if (magsafe_groove) difference() {
+      cylinder(r = magsafe_r, h = magsafe_groove_depth + 1, $fn = 128);
+      translate([0, 0, -1]) cylinder(r = magsafe_r - magsafe_groove_w, h = magsafe_groove_depth + 3, $fn = 128);
+    } else cylinder(r = magsafe_r, h = magsafe_depth + 1, $fn = 128);
   if (has_bay && !has_pod && battery_well_floor > 0)   // battery well sunk into the floor (its walls locate the cell)
     translate([0, 0, battery_well_floor]) linear_extrude(floor_t - battery_well_floor + eps) battery_2d(well_clearance);
 }
