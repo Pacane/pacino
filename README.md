@@ -345,7 +345,9 @@ combination (PLA is ~70 % stiffer than PETG).
 ### Printing (PETG)
 
 - **Case:** prints as-is, bosses up, with a **pause before layer 5** to drop the MagSafe ring into its pocket
-  (see [Bumpons](#bumpons); a support blocker over the ring if you print the bumpon recesses on support).
+  (see [Bumpons](#bumpons)). If you print with supports on (say, for the bumpon recesses), use `case_*.bambu.3mf`
+  instead: the same case as a Bambu Studio / Orca project with a support blocker already over the ring pocket
+  (`tools/bambu_3mf.py` makes it from the plain 3MF) — otherwise the slicer fills the pocket through its window.
   Nothing overhangs except the open-top USB slot (bridged by the
   plate, so it can stay open) and the 1 mm bumpon recesses on the first layer.
 - **Plate:** print top-side down. The cradle, the switch pockets (and the display ring and bezel

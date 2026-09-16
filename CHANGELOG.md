@@ -18,7 +18,8 @@ The project went public on 2026-09-14. Everything before that is condensed at th
   the default for every variant; a 0.4 mm skin over the ring is the clean-looking option, a one-layer skin held
   better but tore along its lines, hence the ledge. The stick-on groove and the glued recess stay as options.
   Case only — **reprint** if you want the ring captive (the groove cases keep working as they are). Print
-  with a pause and, if you use supports, a support blocker over the ring. All variants rebuilt.
+  with a pause and, if you use supports, a support blocker over the ring — every variant now also ships
+  `case_*.bambu.3mf`, a Bambu Studio / Orca project with that blocker in place. All variants rebuilt.
 
 ## 2026-09-15
 

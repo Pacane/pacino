@@ -11,7 +11,8 @@ INDEX="$ROOT/README.md"
   echo "# Variants"
   echo
   echo "Every combination of the four options. Each directory has \`case_{left,right}\` and \`plate_{left,right}\`"
-  echo "as **.step** (Fusion 360 / CAD) and **.3mf** (slicer), plus a bezel for the display versions, previews, and a"
+  echo "as **.step** (Fusion 360 / CAD) and **.3mf** (slicer) -- the case also as \`case_*.bambu.3mf\`, a Bambu Studio / Orca"
+  echo "project with a support blocker over the MagSafe ring pocket, for printing with supports on -- plus a bezel for the display versions, previews, and a"
   echo "\`wiring_guide.png\` showing the underside with the wall, the floor pillars, the matrix and every wire to its nice!nano pin, all clash-free."
   echo "Print the plate top-side down, the case as-is with a pause before layer 5 to drop the MagSafe ring into its pocket; hardware and assembly notes are in the main README."
   echo
@@ -40,6 +41,7 @@ for cols in 5 6; do for extra in no yes; do for bat in 902030 103450; do for dis
     rm -rf "$ROOT/$name"; mkdir -p "$ROOT/$name"
     OUT="$ROOT/$name" SCAD_ARGS="$args" STL=0 PREVIEWS=min BEZEL=$bezel ./build.sh step mesh png 2>&1 | grep -E "STEP|ERROR|fail|Exception" | sed 's/^/  /' || true
     rm -f "$ROOT/$name"/*.csg
+    for side in left right; do python3 tools/bambu_3mf.py "$ROOT/$name/case_$side.3mf"; done   # + support blocker over the ring
     python3 tools/wiring_guide.py -o "$ROOT/$name" $args | sed 's/^/  /'
   fi
   size=$(measure "$args")
@@ -63,6 +65,7 @@ for slim in flat pod; do
     rm -rf "$ROOT/$name"; mkdir -p "$ROOT/$name"
     OUT="$ROOT/$name" SCAD_ARGS="$args" STL=0 PREVIEWS=min ./build.sh step mesh png 2>&1 | grep -E "STEP|ERROR|fail|Exception" | sed 's/^/  /' || true
     rm -f "$ROOT/$name"/*.csg
+    for side in left right; do python3 tools/bambu_3mf.py "$ROOT/$name/case_$side.3mf"; done
     # a printable stand-in for the board, to test-fit the stack before ordering one
     "$OPENSCAD" --backend=Manifold -q -D 'part="pcb_test"' $args -o "$ROOT/$name/pcb_test.3mf" keyboard.scad
     echo "  pcb_test.3mf"

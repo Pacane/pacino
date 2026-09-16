@@ -1,7 +1,8 @@
 # Variants
 
 Every combination of the four options. Each directory has `case_{left,right}` and `plate_{left,right}`
-as **.step** (Fusion 360 / CAD) and **.3mf** (slicer), plus a bezel for the display versions, previews, and a
+as **.step** (Fusion 360 / CAD) and **.3mf** (slicer) -- the case also as `case_*.bambu.3mf`, a Bambu Studio / Orca
+project with a support blocker over the MagSafe ring pocket, for printing with supports on -- plus a bezel for the display versions, previews, and a
 `wiring_guide.png` showing the underside with the wall, the floor pillars, the matrix and every wire to its nice!nano pin, all clash-free.
 Print the plate top-side down, the case as-is with a pause before layer 5 to drop the MagSafe ring into its pocket; hardware and assembly notes are in the main README.
 
