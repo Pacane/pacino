@@ -12,10 +12,13 @@ The project went public on 2026-09-14. Everything before that is condensed at th
 
 ## 2026-09-16
 
-- **Embedded MagSafe ring: exposed through a window.** Two test prints later: the hold through a 0.4 mm skin is
-  decent, a 0.2 mm skin holds better but tears along its lines. `magsafe_skin = 0` now prints a one-layer ledge
-  overlapping the ring's edges (`magsafe_lip_w`) with the steel showing through the window between — same gap as
-  the thin skin, nothing to tear. Default `magsafe_style` is still `"groove"`, nothing changes unless you opt in.
+- **The MagSafe ring is now printed in, by default.** Three test prints on the slim build settled it: the ring
+  goes into a pocket at a print pause before layer 5, exposed through a window in a one-layer ledge, and holds a
+  mount with nothing to stick and nothing to come off. `magsafe_style = "embedded"` with `magsafe_skin = 0` is
+  the default for every variant; a 0.4 mm skin over the ring is the clean-looking option, a one-layer skin held
+  better but tore along its lines, hence the ledge. The stick-on groove and the glued recess stay as options.
+  Case only — **reprint** if you want the ring captive (the groove cases keep working as they are). Print
+  with a pause and, if you use supports, a support blocker over the ring. All variants rebuilt.
 
 ## 2026-09-15
 

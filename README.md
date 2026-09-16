@@ -242,36 +242,34 @@ right-hand corners clear, and the bay is sized so the top-right foot always fits
 a millimetre of wall outside its recess. Each bay foot then moves outward only by what its well
 forces — a couple of millimetres — and the model warns if one has nowhere to go. The wider cells pay
 for it in width: the 103450's bay is 45 mm instead of 44, and its case 148 mm. A 56 mm MagSafe magnet ring (the
-self-adhesive kind) goes under the index column (`magsafe_d`, `magsafe_pos`; 0 = none). By default it sticks
-straight onto the underside inside a one-layer locating groove (`magsafe_style = "groove"`, 0.6 mm wide and 0.2 mm
-deep, 0.3 mm outside the ring's edge): the underside is the first layer off the build plate and the ring's adhesive
-holds on to that surface, as it does on any PETG print. The alternative `"recess"` sinks the ring 1 mm into the
-floor (`magsafe_depth`), but that pocket prints on support and the adhesive does *not* hold on a support-interface
-surface — if you want it flush, sand the pocket and glue the ring in (CA or epoxy). The recess also has to stay
-clear of the battery well, since the two cut the floor from opposite sides and would leave 0.2 mm where they
-overlap (the model warns; the groove leaves 1 mm and may cross it). `out/preview_bottom.png` shows them all.
+self-adhesive kind) goes under the index column (`magsafe_d`, `magsafe_pos`; 0 = none). It is **printed in**
+(`magsafe_style = "embedded"`, the default): an annular pocket exactly as tall as the ring (`magsafe_ring_id`,
+`magsafe_ring_t`; measure your ring — a 56 mm sticker ring is about 45 mm inside and 0.5–0.7 mm thick), open to the
+underside through a window one layer up, so the first layer is a ledge overlapping the ring's edges by 0.8 mm
+(`magsafe_lip_w`) and the steel shows through between them, 0.2 mm below the surface. Add a pause in the slicer
+**before layer 5** (the model prints the height: after the layer ending at z = 0.8 mm), drop the ring in with its
+exposed face **down** and the adhesive up, press it flat, and resume. Layer 5 is then laid straight onto the ring,
+like a first layer on a sticky bed, with the nozzle a full layer above the steel. If supports are on, put a
+support blocker over the ring: the pocket reaches the plate through the window and would otherwise be filled.
+It uses 0.8 mm of the 2.5 mm floor, so it works in the slim build too, and the ring cannot come off. Being
+steel, the ring has no polarity to get wrong.
 
-`"embedded"` prints the ring **in**: an annular pocket exactly as tall as the ring, behind 0.4 mm of floor on
-the underside (`magsafe_ring_id`, `magsafe_ring_t`, `magsafe_skin`; measure your ring — a 56 mm sticker ring is
-about 45 mm inside and 0.5–0.7 mm thick). Add a pause in the slicer after the layer that finishes the pocket's
-walls (the model prints the height: z = 1.0 mm with the defaults), drop the ring in with its exposed face
-**down** and the adhesive up, press it flat, and resume. The ceiling layer is then laid straight onto the ring,
-like a first layer on a sticky bed, with the nozzle a full layer above the steel. Don't leave air over the ring:
-the ceiling would have to bridge it, and since a layer's lines all run one way, the ones running along the ring
-span 30 mm chords and sag (`magsafe_pocket_air` is there only to pad a ring thinner than a layer multiple; keep
-skin + ring + air on a layer boundary, the model notes if it isn't). No support: nothing on the case needs any.
-It uses 1 mm of the 2.5 mm floor, so it works in the slim build too, and cannot come off. Being steel, the ring
-has no polarity to get wrong.
+Why the window: the hold improves with every tenth of a millimetre less between the ring and the mount. A
+0.4 mm skin over the ring (`magsafe_skin = 0.4`) is the clean look and holds decently; a one-layer skin held
+better but tears along its lines with the ring's edge behind it; the ledge is backed by the pocket wall and holds.
+Don't leave air over the ring either (`magsafe_pocket_air` only pads a ring thinner than a layer multiple; keep
+ledge or skin + ring + air on a layer boundary, the model notes if it isn't): the ceiling would have to bridge it,
+and since a layer's lines all run one way, the ones running along the ring span 30 mm chords and sag. The bigger
+lever is the ring itself: the usual sticker ring is 0.65 mm of steel, and a *magnet* ring (1.2–2 mm, 16 segments)
+holds a mount in a different league — the pocket takes it the same way, but it has a right way up: hold it
+against the mount first and put the face it pulls in with down.
 
-The hold through the skin is decent, not great, and it improves with every tenth of a millimetre less between
-the ring and the mount. A one-layer skin (`magsafe_skin = 0.2`) helped, but a single first layer tears along its
-lines with the ring's edge behind it. `magsafe_skin = 0` does it properly: the first layer becomes a ledge that
-overlaps the ring's edges by 0.8 mm (`magsafe_lip_w`) and the steel shows through the window between, 0.2 mm
-below the surface — the same gap as the one-layer skin, but the ledge is backed by the pocket wall and holds.
-The pause is then after the layer ending at z = 0.8 mm. The bigger lever is the ring itself: the usual sticker
-ring is 0.65 mm of steel, and a *magnet* ring (1.2–2 mm, 16 segments) holds a mount in a different league —
-the pocket takes it the same way, but it has a right way up: hold it against the mount first and put the face it
-pulls in with down.
+The two stick-on alternatives: `"groove"` leaves the underside flat with a one-layer locating groove 0.3 mm
+outside the ring's edge, and the ring's adhesive sticks straight to the bed-side first layer (it holds there, as on
+any PETG print). `"recess"` sinks the ring 1 mm into the floor (`magsafe_depth`), but that pocket prints on
+support and the adhesive does *not* hold on a support-interface surface — sand the pocket and glue the ring in.
+The recess has to stay clear of the battery well, since the two cut the floor from opposite sides and would leave
+0.2 mm where they overlap (the model warns). `out/preview_bottom.png` shows them all.
 
 ### How the plate attaches
 
@@ -346,9 +344,9 @@ combination (PLA is ~70 % stiffer than PETG).
 
 ### Printing (PETG)
 
-- **Case:** prints as-is, bosses up. The MagSafe ring goes on afterwards, straight onto the bed-side
-  surface inside its groove — or, with `magsafe_style = "embedded"`, into its pocket at the print pause
-  (see [Bumpons](#bumpons)). Nothing overhangs except the open-top USB slot (bridged by the
+- **Case:** prints as-is, bosses up, with a **pause before layer 5** to drop the MagSafe ring into its pocket
+  (see [Bumpons](#bumpons); a support blocker over the ring if you print the bumpon recesses on support).
+  Nothing overhangs except the open-top USB slot (bridged by the
   plate, so it can stay open) and the 1 mm bumpon recesses on the first layer.
 - **Plate:** print top-side down. The cradle, the switch pockets (and the display ring and bezel
   bosses, if enabled) then point up and need no support; the keycap side gets the smooth first

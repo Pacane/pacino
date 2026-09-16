@@ -216,18 +216,20 @@ bumpon_positions = [[38.1, 58], [15, 20], [71.5, -15.5], [111.7, -31.7]];
 bumpon_skin = 1.0;
 // MagSafe magnet ring (56 mm sticker ring) on the underside; 0 = none
 magsafe_d = 56;
-// how it is located.  "groove": the ring sticks straight onto the underside -- the first layer off the build plate,
-// which its adhesive holds on to -- inside a one-layer locating groove (magsafe_groove_w wide, magsafe_groove_depth
-// deep) just outside its edge; the second layer bridges 0.6 mm, so the surface inside stays first layer.
+// how it is fitted.  "embedded" (default): the ring is printed in.  An annular pocket for it (magsafe_ring_id
+// inside, exactly the ring's thickness tall) sits over the underside; pause the print after the layer that closes
+// the pocket's walls (the model prints the height), drop the ring in exposed face DOWN with its adhesive up, and
+// resume.  The ceiling layer is then laid straight onto the ring like a first layer on a sticky bed -- with air over
+// the ring it has to bridge, and the lines that run along the annulus span 30 mm chords and sag.  Nothing to stick,
+// no support (block it over the ring if supports are on), and the ring cannot come off.  Under the ring: magsafe_skin
+// of floor, or with magsafe_skin = 0 (default) just a one-layer ledge round the ring's edges, the steel showing
+// through the window between -- the best hold, a 0.4 skin is the clean look.
+// "groove": the ring sticks straight onto the underside -- the first layer off the build plate, which its adhesive
+// holds on to -- inside a one-layer locating groove (magsafe_groove_w wide, magsafe_groove_depth deep) just outside
+// its edge; the second layer bridges 0.6 mm, so the surface inside stays first layer.
 // "recess": sunk magsafe_depth into the underside.  That pocket prints on support and the sticker's adhesive will
 // NOT hold on a support-interface surface (it does on the bed-side surface): sand the pocket and glue the ring in.
-// "embedded": the ring is printed in.  An annular pocket for it (magsafe_ring_id inside, exactly the ring's thickness
-// tall) sits behind magsafe_skin of floor on the underside; pause the print after the layer that closes the pocket's
-// walls (the model prints the height), drop the ring in exposed face DOWN with its adhesive up, and resume.  The
-// ceiling layer is then laid straight onto the ring like a first layer on a sticky bed -- with air over the ring it
-// has to bridge, and the lines that run along the annulus span 30 mm chords and sag.  Nothing to stick, no support,
-// and the ring cannot come off.  Needs no extra floor: 0.4 + 0.6 = 1.0 of the 2.5 mm.
-magsafe_style = "groove"; // [groove, recess, embedded]
+magsafe_style = "embedded"; // [embedded, groove, recess]
 magsafe_depth = 1;
 magsafe_clearance = 0.3;
 magsafe_groove_w = 0.6;
@@ -239,7 +241,7 @@ magsafe_groove_depth = 0.2;
 // than a layer multiple (a 0.5 ring: 0.1 of air, or 0.5 of skin).
 magsafe_ring_id = 45;
 magsafe_ring_t = 0.6;
-magsafe_skin = 0.4;
+magsafe_skin = 0;
 magsafe_pocket_air = 0;
 // embedded, magsafe_skin = 0: no skin at all.  The first layer is a ledge overlapping the ring's edges by magsafe_lip_w
 // on each side and the ring shows through the window between them, 0.2 mm below the surface -- the same gap as a

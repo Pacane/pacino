@@ -13,7 +13,7 @@ INDEX="$ROOT/README.md"
   echo "Every combination of the four options. Each directory has \`case_{left,right}\` and \`plate_{left,right}\`"
   echo "as **.step** (Fusion 360 / CAD) and **.3mf** (slicer), plus a bezel for the display versions, previews, and a"
   echo "\`wiring_guide.png\` showing the underside with the wall, the floor pillars, the matrix and every wire to its nice!nano pin, all clash-free."
-  echo "Print the plate top-side down, the case as-is; hardware and assembly notes are in the main README."
+  echo "Print the plate top-side down, the case as-is with a pause before layer 5 to drop the MagSafe ring into its pocket; hardware and assembly notes are in the main README."
   echo
   echo "| variant | columns | keys/half | battery | nice!view | half size (mm) | preview |"
   echo "|---|---|---|---|---|---|---|"
