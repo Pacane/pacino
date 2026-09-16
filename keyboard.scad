@@ -221,21 +221,26 @@ magsafe_d = 56;
 // deep) just outside its edge; the second layer bridges 0.6 mm, so the surface inside stays first layer.
 // "recess": sunk magsafe_depth into the underside.  That pocket prints on support and the sticker's adhesive will
 // NOT hold on a support-interface surface (it does on the bed-side surface): sand the pocket and glue the ring in.
-// "embedded": the ring is printed in.  An annular pocket for it (magsafe_ring_id inside, the ring's thickness + 0.2
+// "embedded": the ring is printed in.  An annular pocket for it (magsafe_ring_id inside, exactly the ring's thickness
 // tall) sits behind magsafe_skin of floor on the underside; pause the print after the layer that closes the pocket's
-// walls (the model prints the height), drop the ring in exposed face DOWN with its adhesive up -- the layer bridging
-// over it then sticks to the adhesive -- and resume.  Nothing to stick, no support (the ring carries the bridge), and
-// the ring cannot come off.  Needs no extra floor: 0.4 + 0.6 + 0.2 = 1.2 of the 2.5 mm.
+// walls (the model prints the height), drop the ring in exposed face DOWN with its adhesive up, and resume.  The
+// ceiling layer is then laid straight onto the ring like a first layer on a sticky bed -- with air over the ring it
+// has to bridge, and the lines that run along the annulus span 30 mm chords and sag.  Nothing to stick, no support,
+// and the ring cannot come off.  Needs no extra floor: 0.4 + 0.6 = 1.0 of the 2.5 mm.
 magsafe_style = "groove"; // [groove, recess, embedded]
 magsafe_depth = 1;
 magsafe_clearance = 0.3;
 magsafe_groove_w = 0.6;
 magsafe_groove_depth = 0.2;
 // embedded: the ring's inner diameter and thickness (adhesive included) -- measure yours; a 56 mm sticker ring is
-// ~45 inside and 0.5-0.7 thick -- and the floor left under it (two layers)
+// ~45 inside and 0.5-0.7 thick -- the floor left under it (two layers), and air over it.  Keep skin + ring + air a
+// multiple of the layer height so the pocket's top is a layer boundary (0.4 + 0.6 + 0 = 1.0 with 0.2 mm layers): the
+// nozzle then passes a full layer above the ring while laying the ceiling on it.  Air only if the ring is thinner
+// than a layer multiple (a 0.5 ring: 0.1 of air, or 0.5 of skin).
 magsafe_ring_id = 45;
 magsafe_ring_t = 0.6;
 magsafe_skin = 0.4;
+magsafe_pocket_air = 0;
 // centre: under the index column, clear of the bumpons and bosses -- and of the battery well, whose key-side
 // edge is on the bay line (x = 86.5): the recess is 1 mm into the underside and the well 1.3 mm into the top of the
 // floor, so where they overlap only 0.2 mm is left (the model warns; the 0.2 mm groove leaves 1 mm and may cross the
@@ -521,7 +526,7 @@ if (has_bay && top_x + bumpon_r > bay_right + wall_e - bumpon_skin + 0.01)
 well_left = batt_c[0] - battery[0] / 2 - well_clearance;
 magsafe_groove = magsafe_style == "groove";
 magsafe_embedded = magsafe_style == "embedded";
-magsafe_pocket_h = magsafe_ring_t + 0.2;                                 // embedded: the pocket's height
+magsafe_pocket_h = magsafe_ring_t + magsafe_pocket_air;                  // embedded: the pocket's height
 magsafe_depth_e = magsafe_groove ? magsafe_groove_depth : magsafe_embedded ? magsafe_skin + magsafe_pocket_h : magsafe_depth;
 magsafe_r = magsafe_d / 2 + magsafe_clearance + (magsafe_groove ? magsafe_groove_w : 0);   // outer radius of the cut
 magsafe_ri = magsafe_ring_id / 2 - magsafe_clearance;                    // embedded: the island inside the pocket
@@ -529,6 +534,9 @@ if (magsafe_d > 0 && magsafe_embedded) {
   echo(str("NOTE: MagSafe ring pocket ", 2 * magsafe_ri, " - ", 2 * magsafe_r, " mm, ", magsafe_pocket_h, " mm tall behind ",
            magsafe_skin, " mm of floor -- pause the print after the layer ending at z = ", magsafe_depth_e,
            " mm, drop the ring in (exposed face down), resume"));
+  if (abs(magsafe_depth_e / 0.2 - round(magsafe_depth_e / 0.2)) > 0.01)
+    echo(str("NOTE: the MagSafe pocket's top (z = ", magsafe_depth_e, ") is not on a 0.2 mm layer boundary -- adjust ",
+             "magsafe_skin or magsafe_pocket_air so the ceiling is one whole layer"));
   if (floor_t - magsafe_depth_e < 0.6)
     echo(str("WARNING: only ", floor_t - magsafe_depth_e, " mm of floor over the MagSafe ring pocket -- thicken floor_t"));
 }

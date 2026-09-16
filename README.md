@@ -251,13 +251,17 @@ surface — if you want it flush, sand the pocket and glue the ring in (CA or ep
 clear of the battery well, since the two cut the floor from opposite sides and would leave 0.2 mm where they
 overlap (the model warns; the groove leaves 1 mm and may cross it). `out/preview_bottom.png` shows them all.
 
-`"embedded"` prints the ring **in**: an annular pocket for it, 0.2 mm taller than the ring, behind 0.4 mm of
-floor on the underside (`magsafe_ring_id`, `magsafe_ring_t`, `magsafe_skin`; measure your ring — a 56 mm sticker
-ring is about 45 mm inside and 0.5–0.7 mm thick). Add a pause in the slicer after the layer that finishes the
-pocket's walls (the model prints the height: z = 1.2 mm with the defaults), drop the ring in with its exposed
-face **down** and the adhesive up — the layer bridging over it sticks to the adhesive — and resume. No support:
-the ring carries the bridge, and nothing else on the case needs any. It uses 1.2 mm of the 2.5 mm floor, so it
-works in the slim build too, and cannot come off. Being steel, the ring has no polarity to get wrong.
+`"embedded"` prints the ring **in**: an annular pocket exactly as tall as the ring, behind 0.4 mm of floor on
+the underside (`magsafe_ring_id`, `magsafe_ring_t`, `magsafe_skin`; measure your ring — a 56 mm sticker ring is
+about 45 mm inside and 0.5–0.7 mm thick). Add a pause in the slicer after the layer that finishes the pocket's
+walls (the model prints the height: z = 1.0 mm with the defaults), drop the ring in with its exposed face
+**down** and the adhesive up, press it flat, and resume. The ceiling layer is then laid straight onto the ring,
+like a first layer on a sticky bed, with the nozzle a full layer above the steel. Don't leave air over the ring:
+the ceiling would have to bridge it, and since a layer's lines all run one way, the ones running along the ring
+span 30 mm chords and sag (`magsafe_pocket_air` is there only to pad a ring thinner than a layer multiple; keep
+skin + ring + air on a layer boundary, the model notes if it isn't). No support: nothing on the case needs any.
+It uses 1 mm of the 2.5 mm floor, so it works in the slim build too, and cannot come off. Being steel, the ring
+has no polarity to get wrong.
 
 ### How the plate attaches
 

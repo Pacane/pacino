@@ -17,7 +17,9 @@ The project went public on 2026-09-14. Everything before that is condensed at th
   that's how it works on other PETG cases). `magsafe_style` now defaults to `"groove"`: no recess, the ring
   sticks straight onto the underside inside a one-layer locating groove. `"embedded"` prints the steel ring
   *into* the floor at a print pause (pocket behind 0.4 mm of floor, the model prints the pause height; set
-  `magsafe_ring_id` / `magsafe_ring_t` to your ring). `"recess"` is the old pocket, for gluing. Case only
+  `magsafe_ring_id` / `magsafe_ring_t` to your ring; the pocket is exactly the ring's height so the ceiling is laid
+  onto the steel rather than bridged — the first test print showed a bridged annulus sagging along the ring).
+  `"recess"` is the old pocket, for gluing. Case only
   — **reprint** if your ring won't stay on, otherwise the old recess is still fine with glue. All variants
   rebuilt with the groove.
 - **M3 hardware option.** `screw_size = "M3"` resizes the insert holes (4.0 mm for 4.2 mm OD inserts),
