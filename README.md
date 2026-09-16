@@ -263,6 +263,16 @@ skin + ring + air on a layer boundary, the model notes if it isn't). No support:
 It uses 1 mm of the 2.5 mm floor, so it works in the slim build too, and cannot come off. Being steel, the ring
 has no polarity to get wrong.
 
+The hold through the skin is decent, not great, and it improves with every tenth of a millimetre less between
+the ring and the mount. A one-layer skin (`magsafe_skin = 0.2`) helped, but a single first layer tears along its
+lines with the ring's edge behind it. `magsafe_skin = 0` does it properly: the first layer becomes a ledge that
+overlaps the ring's edges by 0.8 mm (`magsafe_lip_w`) and the steel shows through the window between, 0.2 mm
+below the surface — the same gap as the one-layer skin, but the ledge is backed by the pocket wall and holds.
+The pause is then after the layer ending at z = 0.8 mm. The bigger lever is the ring itself: the usual sticker
+ring is 0.65 mm of steel, and a *magnet* ring (1.2–2 mm, 16 segments) holds a mount in a different league —
+the pocket takes it the same way, but it has a right way up: hold it against the mount first and put the face it
+pulls in with down.
+
 ### How the plate attaches
 
 The plate is the lid. The case walls end flush with the plate's underside, so the plate rests on

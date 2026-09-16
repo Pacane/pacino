@@ -10,6 +10,13 @@ which parts it touches and whether an existing build is affected:
 
 The project went public on 2026-09-14. Everything before that is condensed at the bottom.
 
+## 2026-09-16
+
+- **Embedded MagSafe ring: exposed through a window.** Two test prints later: the hold through a 0.4 mm skin is
+  decent, a 0.2 mm skin holds better but tears along its lines. `magsafe_skin = 0` now prints a one-layer ledge
+  overlapping the ring's edges (`magsafe_lip_w`) with the steel showing through the window between — same gap as
+  the thin skin, nothing to tear. Default `magsafe_style` is still `"groove"`, nothing changes unless you opt in.
+
 ## 2026-09-15
 
 - **MagSafe ring: three ways to fit it.** The 1 mm recess under the index column printed on support, and

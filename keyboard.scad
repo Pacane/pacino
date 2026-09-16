@@ -241,6 +241,12 @@ magsafe_ring_id = 45;
 magsafe_ring_t = 0.6;
 magsafe_skin = 0.4;
 magsafe_pocket_air = 0;
+// embedded, magsafe_skin = 0: no skin at all.  The first layer is a ledge overlapping the ring's edges by magsafe_lip_w
+// on each side and the ring shows through the window between them, 0.2 mm below the surface -- the same gap as a
+// 0.2 mm skin, but a one-layer skin tears along its lines (2026-09-16 print) and a ledge backed by the pocket wall
+// does not.  The pocket then starts one layer up.
+magsafe_lip_w = 0.8;
+magsafe_lip_t = 0.2;
 // centre: under the index column, clear of the bumpons and bosses -- and of the battery well, whose key-side
 // edge is on the bay line (x = 86.5): the recess is 1 mm into the underside and the well 1.3 mm into the top of the
 // floor, so where they overlap only 0.2 mm is left (the model warns; the 0.2 mm groove leaves 1 mm and may cross the
@@ -527,12 +533,16 @@ well_left = batt_c[0] - battery[0] / 2 - well_clearance;
 magsafe_groove = magsafe_style == "groove";
 magsafe_embedded = magsafe_style == "embedded";
 magsafe_pocket_h = magsafe_ring_t + magsafe_pocket_air;                  // embedded: the pocket's height
-magsafe_depth_e = magsafe_groove ? magsafe_groove_depth : magsafe_embedded ? magsafe_skin + magsafe_pocket_h : magsafe_depth;
+magsafe_open = magsafe_embedded && magsafe_skin <= 0;                  // ring exposed through a window in a ledge
+magsafe_base = magsafe_open ? magsafe_lip_t : magsafe_skin;             // embedded: where the pocket starts
+magsafe_depth_e = magsafe_groove ? magsafe_groove_depth : magsafe_embedded ? magsafe_base + magsafe_pocket_h : magsafe_depth;
 magsafe_r = magsafe_d / 2 + magsafe_clearance + (magsafe_groove ? magsafe_groove_w : 0);   // outer radius of the cut
 magsafe_ri = magsafe_ring_id / 2 - magsafe_clearance;                    // embedded: the island inside the pocket
 if (magsafe_d > 0 && magsafe_embedded) {
   echo(str("NOTE: MagSafe ring pocket ", 2 * magsafe_ri, " - ", 2 * magsafe_r, " mm, ", magsafe_pocket_h, " mm tall behind ",
-           magsafe_skin, " mm of floor -- pause the print after the layer ending at z = ", magsafe_depth_e,
+           magsafe_open ? str("a ", magsafe_lip_t, " mm ledge (window ", magsafe_ring_id + 2 * magsafe_lip_w, " - ",
+                              magsafe_d - 2 * magsafe_lip_w, " mm)") : str(magsafe_skin, " mm of floor"),
+           " -- pause the print after the layer ending at z = ", magsafe_depth_e,
            " mm, drop the ring in (exposed face down), resume"));
   if (abs(magsafe_depth_e / 0.2 - round(magsafe_depth_e / 0.2)) > 0.01)
     echo(str("NOTE: the MagSafe pocket's top (z = ", magsafe_depth_e, ") is not on a 0.2 mm layer boundary -- adjust ",
@@ -830,9 +840,15 @@ module case_bottom() difference() {
     if (magsafe_groove) difference() {
       cylinder(r = magsafe_r, h = magsafe_groove_depth + 1, $fn = 128);
       translate([0, 0, -1]) cylinder(r = magsafe_r - magsafe_groove_w, h = magsafe_groove_depth + 3, $fn = 128);
-    } else if (magsafe_embedded) translate([0, 0, 1 + magsafe_skin]) difference() {
-      cylinder(r = magsafe_r, h = magsafe_pocket_h, $fn = 128);
-      translate([0, 0, -1]) cylinder(r = magsafe_ri, h = magsafe_pocket_h + 2, $fn = 128);
+    } else if (magsafe_embedded) {
+      translate([0, 0, 1 + magsafe_base]) difference() {
+        cylinder(r = magsafe_r, h = magsafe_pocket_h, $fn = 128);
+        translate([0, 0, -1]) cylinder(r = magsafe_ri, h = magsafe_pocket_h + 2, $fn = 128);
+      }
+      if (magsafe_open) difference() {   // the window through the ledge, magsafe_lip_w inside the ring's edges
+        cylinder(r = magsafe_d / 2 - magsafe_lip_w, h = 1 + magsafe_lip_t + eps, $fn = 128);
+        translate([0, 0, -1]) cylinder(r = magsafe_ring_id / 2 + magsafe_lip_w, h = magsafe_lip_t + 3, $fn = 128);
+      }
     } else cylinder(r = magsafe_r, h = magsafe_depth + 1, $fn = 128);
   if (has_bay && !has_pod && battery_well_floor > 0)   // battery well sunk into the floor (its walls locate the cell)
     translate([0, 0, battery_well_floor]) linear_extrude(floor_t - battery_well_floor + eps) battery_2d(well_clearance);
