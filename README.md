@@ -55,6 +55,7 @@ tools/csg2step.py        OpenSCAD .csg -> STEP, runs inside FreeCAD
 tools/svg_polygon.py     helper: bakes the cavity outline to a polygon for the FreeCAD pass
 build.sh                 builds everything into out/
 out/                     STEP / 3MF / STL / DXF / PNG — regenerate any time, never hand-edit
+CHANGELOG.md             what changed since you printed — and whether you need to reprint, re-order or reflash
 ```
 
 ## Pick a ready-made variant
