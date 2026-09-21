@@ -135,6 +135,9 @@ battery thickness + 4): `902030` (20 × 30 × 9, 500 mAh — weeks per charge; 1
 `103450` (34 × 50 × 10, 2000 mAh; 45 × 60 bay, 14.5 mm cavity, +1 mm case height and +3 mm width — the bay reaches past the thumb cluster), `604060` (40 × 60 × 6; 10.5 mm cavity),
 or `custom` with `battery_custom`. Build the 2000 mAh version alongside the default with
 `SUFFIX=_2000mah SCAD_ARGS='-D battery_type="103450"' ./build.sh` → `case_2000mah_*`, `plate_2000mah_*`.
+The controller charges at 100 mA by default, which is ~20 h for the 2000 mAh cell: before you fit it, bridge the
+**boost** solder jumper on the back of the board (two pads by the battery pads; 500 mA on a nice!nano v2, 300 mA
+on the SuperMini clones — only with a cell over 500 mAh, so not for the 902030 or 303040).
 
 ### How the nano and the battery are held
 
