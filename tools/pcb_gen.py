@@ -1080,7 +1080,8 @@ switch by two diagonal legs only).
    switch bodies. The nano sits on top of the board, **component side down** (towards the board:
    its USB shell lives in the 3.5 mm socket gap), USB towards the notch in the wall, and finishes
    flush in the plate's window. The nano's own B+ / B- pads stay empty; the battery reaches it
-   through RAW / GND.
+   through RAW / GND -- *after* the slide switch, so **charge with the switch on**: switched off, the
+   charger sees no cell and its blue LED blinks instead of charging.
 6. Bridge `JP1` and `JP2` to the pad marked for your half.
 7. %(leads)s
 
